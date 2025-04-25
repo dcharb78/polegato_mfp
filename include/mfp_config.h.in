@@ -1,0 +1,40 @@
+#pragma once
+
+#define MFP_ENHANCED_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define MFP_ENHANCED_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define MFP_ENHANCED_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define MFP_ENHANCED_VERSION "@PROJECT_VERSION@"
+
+#cmakedefine HAS_CUDA
+#cmakedefine HAS_METAL
+
+#include <string>
+
+namespace mfp {
+namespace config {
+
+// Get version string
+inline std::string getVersionString() {
+    return MFP_ENHANCED_VERSION;
+}
+
+// Check if CUDA is supported
+inline bool hasCUDASupport() {
+#ifdef HAS_CUDA
+    return true;
+#else
+    return false;
+#endif
+}
+
+// Check if Metal is supported
+inline bool hasMetalSupport() {
+#ifdef HAS_METAL
+    return true;
+#else
+    return false;
+#endif
+}
+
+} // namespace config
+} // namespace mfp
