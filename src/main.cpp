@@ -3,189 +3,97 @@
 #include <vector>
 #include <chrono>
 #include "mfp_system.h"
-#include "resource_manager.h"
-#include "configuration_manager.h"
 
 void printUsage(const char* programName) {
     std::cout << "Usage: " << programName << " [options] <command> [arguments]" << std::endl;
     std::cout << std::endl;
     std::cout << "Commands:" << std::endl;
     std::cout << "  isprime <number>              Check if a number is prime" << std::endl;
-    std::cout << "  nextprime <number>            Find the next prime number" << std::endl;
     std::cout << "  factorize <number>            Find prime factors of a number" << std::endl;
-    std::cout << "  benchmark                     Run performance benchmark" << std::endl;
-    std::cout << "  sysinfo                       Display system information" << std::endl;
+    std::cout << "  nextprime <number>            Find the next prime number" << std::endl;
+    std::cout << "  benchmark <number>            Run benchmark on all methods" << std::endl;
     std::cout << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  --cpu-only                    Use CPU only" << std::endl;
-    std::cout << "  --gpu-only                    Use GPU only" << std::endl;
-    std::cout << "  --cuda-only                   Use CUDA GPU only" << std::endl;
-    std::cout << "  --metal-only                  Use Metal GPU only" << std::endl;
-    std::cout << "  --hybrid                      Use both CPU and GPU" << std::endl;
-    std::cout << "  --method <1|2|3|auto>         Select MFP method" << std::endl;
-    std::cout << "  --perf-log <on|off>           Enable/disable performance logging" << std::endl;
-    std::cout << "  --config <file>               Load configuration from file" << std::endl;
-    std::cout << "  --save-config <file>          Save configuration to file" << std::endl;
-    std::cout << "  --profile <name>              Use specific configuration profile" << std::endl;
+    std::cout << "  --method <1|2|3|auto>         Select MFP method (default: auto)" << std::endl;
+    std::cout << "  --threads <num>               Number of threads to use (default: all cores)" << std::endl;
     std::cout << "  --help                        Display this help message" << std::endl;
     std::cout << "  --version                     Display version information" << std::endl;
 }
 
 void printVersion() {
-    std::cout << "MFP Enhanced v" << mfp::config::getVersionString() << std::endl;
-    std::cout << "CUDA Support: " << (mfp::config::hasCUDASupport() ? "Yes" : "No") << std::endl;
-    std::cout << "Metal Support: " << (mfp::config::hasMetalSupport() ? "Yes" : "No") << std::endl;
+    std::cout << "MFP Implementation v1.0.0" << std::endl;
     std::cout << "Modular Factorization Pattern algorithm by Marlon F. Polegato" << std::endl;
     std::cout << "https://www.linkedin.com/in/marlonpolegato/" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-    // Check for help or version flags
-    if (argc < 2 || std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h") {
-        printUsage(argv[0]);
-        return 0;
-    }
-    
-    if (std::string(argv[1]) == "--version" || std::string(argv[1]) == "-v") {
-        printVersion();
-        return 0;
-    }
-    
-    // Create resource manager
-    mfp::resource::ResourceManager resource_manager;
-    
-    // Initialize resource manager
-    if (!resource_manager.initialize()) {
-        std::cerr << "Failed to initialize resource manager" << std::endl;
-        return 1;
-    }
-    
-    // Create configuration manager
-    mfp::config::ConfigurationManager config_manager;
-    
-    // Initialize configuration manager
-    if (!config_manager.initialize(&resource_manager)) {
-        std::cerr << "Failed to initialize configuration manager" << std::endl;
-        return 1;
-    }
-    
-    // Auto-configure based on hardware
-    if (!config_manager.autoConfigureForHardware()) {
-        std::cerr << "Failed to auto-configure for hardware" << std::endl;
-        return 1;
-    }
-    
-    // Parse command line arguments
+    // Default values
+    mfp::MFPMethodType method = mfp::MFPMethodType::AUTO;
+    int numThreads = 0; // 0 means use all available cores
     std::string command;
     std::string number;
-    std::string configFile;
-    std::string saveConfigFile;
-    std::string profileName;
     
+    // Parse command line arguments
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         
-        if (arg == "--cpu-only") {
-            resource_manager.setAllocationMode(mfp::resource::AllocationMode::CPU_ONLY);
-        } else if (arg == "--gpu-only") {
-            resource_manager.setAllocationMode(mfp::resource::AllocationMode::GPU_ONLY);
-        } else if (arg == "--cuda-only") {
-            resource_manager.setAllocationMode(mfp::resource::AllocationMode::CUDA_ONLY);
-        } else if (arg == "--metal-only") {
-            resource_manager.setAllocationMode(mfp::resource::AllocationMode::METAL_ONLY);
-        } else if (arg == "--hybrid") {
-            resource_manager.setAllocationMode(mfp::resource::AllocationMode::HYBRID);
-        } else if (arg == "--method") {
+        if (arg == "--help" || arg == "-h") {
+            printUsage(argv[0]);
+            return 0;
+        } else if (arg == "--version" || arg == "-v") {
+            printVersion();
+            return 0;
+        } else if (arg == "--method" || arg == "-m") {
             if (i + 1 < argc) {
-                std::string method = argv[++i];
-                if (method == "1") {
-                    resource_manager.setMFPMethod(mfp::resource::MFPMethod::METHOD_1);
-                } else if (method == "2") {
-                    resource_manager.setMFPMethod(mfp::resource::MFPMethod::METHOD_2);
-                } else if (method == "3") {
-                    resource_manager.setMFPMethod(mfp::resource::MFPMethod::METHOD_3);
-                } else if (method == "auto") {
-                    resource_manager.setMFPMethod(mfp::resource::MFPMethod::AUTO);
+                std::string methodStr = argv[++i];
+                if (methodStr == "1") {
+                    method = mfp::MFPMethodType::METHOD_1;
+                } else if (methodStr == "2") {
+                    method = mfp::MFPMethodType::METHOD_2;
+                } else if (methodStr == "3") {
+                    method = mfp::MFPMethodType::METHOD_3;
+                } else if (methodStr == "auto") {
+                    method = mfp::MFPMethodType::AUTO;
                 } else {
-                    std::cerr << "Invalid method: " << method << std::endl;
+                    std::cerr << "Invalid method: " << methodStr << std::endl;
                     return 1;
                 }
             } else {
                 std::cerr << "Missing method argument" << std::endl;
                 return 1;
             }
-        } else if (arg == "--perf-log") {
+        } else if (arg == "--threads" || arg == "-t") {
             if (i + 1 < argc) {
-                std::string value = argv[++i];
-                if (value == "on") {
-                    resource_manager.setPerformanceLogging(true);
-                } else if (value == "off") {
-                    resource_manager.setPerformanceLogging(false);
-                } else {
-                    std::cerr << "Invalid performance logging value: " << value << std::endl;
+                try {
+                    numThreads = std::stoi(argv[++i]);
+                    if (numThreads < 0) {
+                        std::cerr << "Number of threads must be non-negative" << std::endl;
+                        return 1;
+                    }
+                } catch (const std::exception& e) {
+                    std::cerr << "Invalid number of threads: " << argv[i] << std::endl;
                     return 1;
                 }
             } else {
-                std::cerr << "Missing performance logging argument" << std::endl;
+                std::cerr << "Missing threads argument" << std::endl;
                 return 1;
             }
-        } else if (arg == "--config") {
-            if (i + 1 < argc) {
-                configFile = argv[++i];
-            } else {
-                std::cerr << "Missing config file argument" << std::endl;
-                return 1;
-            }
-        } else if (arg == "--save-config") {
-            if (i + 1 < argc) {
-                saveConfigFile = argv[++i];
-            } else {
-                std::cerr << "Missing save config file argument" << std::endl;
-                return 1;
-            }
-        } else if (arg == "--profile") {
-            if (i + 1 < argc) {
-                profileName = argv[++i];
-            } else {
-                std::cerr << "Missing profile name argument" << std::endl;
-                return 1;
-            }
-        } else if (arg[0] != '-') {
-            // Non-option argument
-            if (command.empty()) {
-                command = arg;
-            } else if (number.empty() && (command == "isprime" || command == "nextprime" || command == "factorize")) {
-                number = arg;
-            }
+        } else if (command.empty()) {
+            command = arg;
+        } else if (number.empty()) {
+            number = arg;
         }
     }
     
-    // Load configuration if specified
-    if (!configFile.empty()) {
-        if (!config_manager.loadConfiguration(configFile)) {
-            std::cerr << "Failed to load configuration from " << configFile << std::endl;
-            return 1;
-        }
-    }
-    
-    // Set profile if specified
-    if (!profileName.empty()) {
-        config_manager.setCurrentProfile(profileName);
-    }
-    
-    // Apply configuration
-    config_manager.applyConfiguration();
-    
-    // Save configuration if specified
-    if (!saveConfigFile.empty()) {
-        if (!config_manager.saveConfiguration(saveConfigFile)) {
-            std::cerr << "Failed to save configuration to " << saveConfigFile << std::endl;
-            return 1;
-        }
+    // Check if command is provided
+    if (command.empty()) {
+        std::cerr << "No command specified" << std::endl;
+        printUsage(argv[0]);
+        return 1;
     }
     
     // Create MFP system
-    mfp::MFPSystem system(&resource_manager);
+    mfp::MFPSystem mfpSystem(method, numThreads);
     
     // Execute command
     if (command == "isprime") {
@@ -194,89 +102,84 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         
-        auto start_time = std::chrono::high_resolution_clock::now();
-        bool is_prime = system.isPrime(number);
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+        auto start = std::chrono::high_resolution_clock::now();
+        bool isPrime = mfpSystem.isPrime(number);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         
-        std::cout << number << " is " << (is_prime ? "prime" : "not prime") << std::endl;
-        std::cout << "Execution time: " << duration << " ms" << std::endl;
-        
-        if (resource_manager.getPerformanceLogging()) {
-            std::cout << "\nPerformance Metrics:" << std::endl;
-            std::cout << resource_manager.getPerformanceMetrics() << std::endl;
-        }
-    } else if (command == "nextprime") {
-        if (number.empty()) {
-            std::cerr << "Missing number argument" << std::endl;
-            return 1;
-        }
-        
-        auto start_time = std::chrono::high_resolution_clock::now();
-        std::string next_prime = system.findNextPrime(number);
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        
-        std::cout << "Next prime after " << number << " is " << next_prime << std::endl;
-        std::cout << "Execution time: " << duration << " ms" << std::endl;
-        
-        if (resource_manager.getPerformanceLogging()) {
-            std::cout << "\nPerformance Metrics:" << std::endl;
-            std::cout << resource_manager.getPerformanceMetrics() << std::endl;
-        }
+        std::cout << number << " is " << (isPrime ? "prime" : "not prime") << std::endl;
+        std::cout << "Time: " << duration << " ms" << std::endl;
     } else if (command == "factorize") {
         if (number.empty()) {
             std::cerr << "Missing number argument" << std::endl;
             return 1;
         }
         
-        std::vector<std::string> factors;
+        auto start = std::chrono::high_resolution_clock::now();
+        std::vector<std::string> factors = mfpSystem.factorize(number);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         
-        auto start_time = std::chrono::high_resolution_clock::now();
-        bool success = system.findPrimeFactors(number, factors);
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        
-        if (success) {
-            std::cout << "Prime factors of " << number << ":" << std::endl;
-            for (const auto& factor : factors) {
-                std::cout << factor << std::endl;
-            }
-        } else {
-            std::cout << "Failed to factorize " << number << std::endl;
+        std::cout << "Factors of " << number << ":" << std::endl;
+        for (const auto& factor : factors) {
+            std::cout << factor << std::endl;
+        }
+        std::cout << "Time: " << duration << " ms" << std::endl;
+    } else if (command == "nextprime") {
+        if (number.empty()) {
+            std::cerr << "Missing number argument" << std::endl;
+            return 1;
         }
         
-        std::cout << "Execution time: " << duration << " ms" << std::endl;
+        auto start = std::chrono::high_resolution_clock::now();
+        std::string nextPrime = mfpSystem.findNextPrime(number);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         
-        if (resource_manager.getPerformanceLogging()) {
-            std::cout << "\nPerformance Metrics:" << std::endl;
-            std::cout << resource_manager.getPerformanceMetrics() << std::endl;
-        }
+        std::cout << "Next prime after " << number << " is " << nextPrime << std::endl;
+        std::cout << "Time: " << duration << " ms" << std::endl;
     } else if (command == "benchmark") {
-        std::cout << "Running benchmark..." << std::endl;
-        
-        auto start_time = std::chrono::high_resolution_clock::now();
-        mfp::resource::BenchmarkResult result = resource_manager.runBenchmark();
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        
-        std::cout << "Benchmark completed in " << duration << " ms" << std::endl;
-        std::cout << "\nBenchmark Results:" << std::endl;
-        std::cout << "CPU Score: " << result.cpu_score << std::endl;
-        std::cout << "CUDA Score: " << result.cuda_score << std::endl;
-        std::cout << "Metal Score: " << result.metal_score << std::endl;
-        std::cout << "Best Device: " << result.best_device << std::endl;
-        
-        if (!result.details.empty()) {
-            std::cout << "\nDetails:" << std::endl;
-            std::cout << result.details << std::endl;
+        if (number.empty()) {
+            std::cerr << "Missing number argument" << std::endl;
+            return 1;
         }
-    } else if (command == "sysinfo") {
-        std::cout << "System Information:" << std::endl;
-        std::cout << resource_manager.getSystemInfo() << std::endl;
         
-        std::cout << "\nConfiguration:" << std::endl;
-        std::cout << config_manager.getConfigurationSummary() << std::endl;
+        std::cout << "Benchmarking MFP methods for number: " << number << std::endl;
+        
+        // Method 1
+        mfpSystem.setMethod(mfp::MFPMethodType::METHOD_1);
+        auto start1 = std::chrono::high_resolution_clock::now();
+        bool isPrime1 = mfpSystem.isPrime(number);
+        auto end1 = std::chrono::high_resolution_clock::now();
+        auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1).count();
+        
+        // Method 2
+        mfpSystem.setMethod(mfp::MFPMethodType::METHOD_2);
+        auto start2 = std::chrono::high_resolution_clock::now();
+        bool isPrime2 = mfpSystem.isPrime(number);
+        auto end2 = std::chrono::high_resolution_clock::now();
+        auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2).count();
+        
+        // Method 3
+        mfpSystem.setMethod(mfp::MFPMethodType::METHOD_3);
+        auto start3 = std::chrono::high_resolution_clock::now();
+        bool isPrime3 = mfpSystem.isPrime(number);
+        auto end3 = std::chrono::high_resolution_clock::now();
+        auto duration3 = std::chrono::duration_cast<std::chrono::milliseconds>(end3 - start3).count();
+        
+        std::cout << "Results:" << std::endl;
+        std::cout << "Method 1 (Expanded q Factorization): " << duration1 << " ms, " << (isPrime1 ? "prime" : "not prime") << std::endl;
+        std::cout << "Method 2 (Ultrafast with Structural Filter): " << duration2 << " ms, " << (isPrime2 ? "prime" : "not prime") << std::endl;
+        std::cout << "Method 3 (Parallelized with Dynamic Blocks): " << duration3 << " ms, " << (isPrime3 ? "prime" : "not prime") << std::endl;
+        
+        // Determine fastest method
+        if (duration1 <= duration2 && duration1 <= duration3) {
+            std::cout << "Method 1 is fastest" << std::endl;
+        } else if (duration2 <= duration1 && duration2 <= duration3) {
+            std::cout << "Method 2 is fastest" << std::endl;
+        } else {
+            std::cout << "Method 3 is fastest" << std::endl;
+        }
     } else {
         std::cerr << "Unknown command: " << command << std::endl;
         printUsage(argv[0]);

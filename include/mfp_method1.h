@@ -6,22 +6,16 @@ namespace mfp {
 
 class MFPMethod1 : public MFPBase {
 public:
-    // Constructor and destructor
-    MFPMethod1(int num_threads = 1);
-    ~MFPMethod1() override;
-    
-    // Core methods implementation
-    bool isPrime(const mpz_t& number) override;
-    bool findDivisor(const mpz_t& number, mpz_t& divisor_out) override;
+    MFPMethod1();
+    virtual ~MFPMethod1();
+
+    virtual bool isPrime(const std::string& number) override;
+    virtual std::vector<std::string> factorize(const std::string& number) override;
+    virtual std::string findNextPrime(const std::string& number) override;
     
 private:
-    // Method-specific parameters
-    int num_threads_;
-    
-    // Method-specific helper methods
-    bool expandedQFactorization(const mpz_t& number, mpz_t& divisor_out);
-    bool computeQExpansion(const mpz_t& number, std::vector<mpz_t>& q_values);
-    bool findPatternInQSequence(const std::vector<mpz_t>& q_values, mpz_t& divisor_out);
+    // Method 1 specific implementation details (Expanded q Factorization)
+    bool expandedQFactorization(const std::string& number, std::vector<std::string>& factors);
 };
 
 } // namespace mfp

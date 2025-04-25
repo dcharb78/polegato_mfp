@@ -1,1261 +1,438 @@
 #include "resource_manager.h"
+#include "gpu/cuda_accelerator.h"
+#include "gpu/metal_accelerator.h"
+#include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <thread>
-#include <iomanip>
+#include <chrono>
+#include <random>
 #include <cmath>
 
 namespace mfp {
-namespace resource {
 
-//=============================================================================
-// CPU Strategy Implementation
-//=============================================================================
+// Static instance for global access
+static ResourceManager s_instance;
 
-CPUStrategy::CPUStrategy(const system::CPUInfo& cpu_info, const system::MemoryInfo& memory_info)
-    : cpu_info_(cpu_info),
-      memory_info_(memory_info),
-      initialized_(false),
-      performance_logging_enabled_(false),
-      optimal_thread_count_(0) {
+ResourceManager::ResourceManager() 
+    : m_strategy(ExecutionStrategy::AUTO), 
+      m_mode(AllocationMode::AUTO) {
 }
 
-bool CPUStrategy::initialize() {
-    if (initialized_) {
-        return true;
+ResourceManager::~ResourceManager() {
+    // Cleanup happens in member destructors
+}
+
+bool ResourceManager::initialize() {
+    // Detect hardware capabilities
+    detectHardware();
+    
+    // Initialize accelerators if available
+    if (isCUDAAvailable()) {
+        m_cuda_accelerator = std::make_shared<CUDAAccelerator>();
+        if (!m_cuda_accelerator->initialize(getBestGPU())) {
+            m_cuda_accelerator.reset();
+        }
     }
     
-    // Calculate optimal thread count based on CPU info
-    optimal_thread_count_ = calculateOptimalThreadCount();
+    if (isMetalAvailable()) {
+        m_metal_accelerator = std::make_shared<MetalAccelerator>();
+        if (!m_metal_accelerator->initialize(getBestGPU())) {
+            m_metal_accelerator.reset();
+        }
+    }
     
-    initialized_ = true;
+    // Determine optimal strategy based on available hardware
+    determineOptimalStrategy();
+    
     return true;
 }
 
-bool CPUStrategy::isAvailable() const {
-    return initialized_;
+const CPUInfo& ResourceManager::getCPUInfo() const {
+    return m_cpu_detector.getCPUInfo();
 }
 
-bool CPUStrategy::runMFP(MFPMethod method, const std::string& number, std::vector<std::string>& factors) {
-    if (!initialized_) {
-        return false;
+const MemoryInfo& ResourceManager::getMemoryInfo() const {
+    return m_memory_storage_detector.getMemoryInfo();
+}
+
+const StorageInfo& ResourceManager::getStorageInfo() const {
+    return m_memory_storage_detector.getStorageInfo();
+}
+
+const std::vector<GPUInfo>& ResourceManager::getGPUs() const {
+    return m_gpu_detector.getGPUs();
+}
+
+GPUInfo ResourceManager::getBestGPU() const {
+    return m_gpu_detector.findBestComputeGPU();
+}
+
+void ResourceManager::setExecutionStrategy(ExecutionStrategy strategy) {
+    m_strategy = strategy;
+    
+    // If strategy is AUTO, determine the optimal strategy
+    if (m_strategy == ExecutionStrategy::AUTO) {
+        determineOptimalStrategy();
     }
+}
+
+ExecutionStrategy ResourceManager::getExecutionStrategy() const {
+    return m_strategy;
+}
+
+void ResourceManager::setAllocationMode(AllocationMode mode) {
+    m_mode = mode;
+}
+
+AllocationMode ResourceManager::getAllocationMode() const {
+    return m_mode;
+}
+
+int ResourceManager::getOptimalThreadCount() const {
+    const CPUInfo& cpu_info = getCPUInfo();
     
-    auto start_time = std::chrono::high_resolution_clock::now();
-    bool result = false;
+    // Start with logical core count
+    int thread_count = cpu_info.logical_cores;
     
-    // Implement CPU-based MFP methods
-    switch (method) {
-        case MFPMethod::METHOD_1:
-            // TODO: Implement Method 1 on CPU
-            result = true;
+    // Adjust based on allocation mode
+    switch (m_mode) {
+        case AllocationMode::PERFORMANCE:
+            // Use all available cores
             break;
             
-        case MFPMethod::METHOD_2:
-            // TODO: Implement Method 2 on CPU
-            result = true;
+        case AllocationMode::MEMORY:
+            // Use fewer cores to reduce memory usage
+            thread_count = std::max(1, thread_count / 2);
             break;
             
-        case MFPMethod::METHOD_3:
-            // TODO: Implement Method 3 on CPU
-            result = true;
+        case AllocationMode::BALANCED:
+            // Use a balanced number of cores
+            thread_count = std::max(1, thread_count * 3 / 4);
             break;
             
-        case MFPMethod::AUTO:
-            // For AUTO, choose the best method based on number size
-            if (number.size() < 100) {
-                // For small numbers, use Method 1
-                // TODO: Implement Method 1 on CPU
-                result = true;
-            } else if (number.size() < 1000) {
-                // For medium numbers, use Method 2
-                // TODO: Implement Method 2 on CPU
-                result = true;
-            } else {
-                // For large numbers, use Method 3
-                // TODO: Implement Method 3 on CPU
-                result = true;
+        case AllocationMode::AUTO:
+            // Adjust based on CPU architecture and workload
+            if (cpu_info.has_hyperthreading) {
+                // For hyperthreaded CPUs, using physical core count often gives better performance
+                thread_count = cpu_info.physical_cores;
             }
             break;
-    }
-    
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-    
-    if (performance_logging_enabled_) {
-        PerformanceMetrics metrics;
-        metrics.execution_time_ms = duration;
-        metrics.memory_used_bytes = number.size() * 10; // Estimate memory usage
-        metrics.threads_used = optimal_thread_count_;
-        
-        switch (method) {
-            case MFPMethod::METHOD_1:
-                metrics.method_name = "CPU_Method1_ExpandedQFactorization";
-                break;
-                
-            case MFPMethod::METHOD_2:
-                metrics.method_name = "CPU_Method2_UltrafastWithStructuralFilter";
-                break;
-                
-            case MFPMethod::METHOD_3:
-                metrics.method_name = "CPU_Method3_ParallelizedWithDynamicBlocks";
-                break;
-                
-            case MFPMethod::AUTO:
-                metrics.method_name = "CPU_MethodAuto";
-                break;
-        }
-        
-        logPerformance(metrics);
-    }
-    
-    return result;
-}
-
-bool CPUStrategy::isPrime(const std::string& number) {
-    if (!initialized_) {
-        return false;
-    }
-    
-    auto start_time = std::chrono::high_resolution_clock::now();
-    
-    // TODO: Implement isPrime on CPU
-    bool result = true;
-    
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-    
-    if (performance_logging_enabled_) {
-        PerformanceMetrics metrics;
-        metrics.execution_time_ms = duration;
-        metrics.memory_used_bytes = number.size() * 2; // Estimate memory usage
-        metrics.threads_used = optimal_thread_count_;
-        metrics.method_name = "CPU_IsPrime";
-        
-        logPerformance(metrics);
-    }
-    
-    return result;
-}
-
-std::string CPUStrategy::findNextPrime(const std::string& number) {
-    if (!initialized_) {
-        return "";
-    }
-    
-    auto start_time = std::chrono::high_resolution_clock::now();
-    
-    // TODO: Implement findNextPrime on CPU
-    std::string result = number;
-    
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-    
-    if (performance_logging_enabled_) {
-        PerformanceMetrics metrics;
-        metrics.execution_time_ms = duration;
-        metrics.memory_used_bytes = number.size() * 3; // Estimate memory usage
-        metrics.threads_used = optimal_thread_count_;
-        metrics.method_name = "CPU_FindNextPrime";
-        
-        logPerformance(metrics);
-    }
-    
-    return result;
-}
-
-bool CPUStrategy::findPrimeFactors(const std::string& number, std::vector<std::string>& factors) {
-    if (!initialized_) {
-        return false;
-    }
-    
-    // Use Method 3 by default for prime factorization
-    return runMFP(MFPMethod::METHOD_3, number, factors);
-}
-
-std::string CPUStrategy::getPerformanceMetrics() const {
-    if (performance_metrics_.empty()) {
-        return "No performance metrics available for CPU strategy";
-    }
-    
-    std::stringstream ss;
-    ss << "CPU Strategy Performance Metrics:\n";
-    
-    for (const auto& metrics : performance_metrics_) {
-        ss << "Method: " << metrics.method_name << "\n";
-        ss << "  Execution Time: " << metrics.execution_time_ms << " ms\n";
-        ss << "  Memory Used: " << (metrics.memory_used_bytes / (1024.0 * 1024.0)) << " MB\n";
-        ss << "  Threads Used: " << metrics.threads_used << "\n";
-        ss << "\n";
-    }
-    
-    return ss.str();
-}
-
-std::string CPUStrategy::getDeviceInfo() const {
-    std::stringstream ss;
-    ss << "CPU: " << cpu_info_.model_name << "\n";
-    ss << "  Architecture: " << cpu_info_.architecture << "\n";
-    ss << "  Physical Cores: " << cpu_info_.physical_cores << "\n";
-    ss << "  Logical Cores: " << cpu_info_.logical_cores << "\n";
-    ss << "  Base Frequency: " << cpu_info_.base_frequency_mhz << " MHz\n";
-    
-    if (!cpu_info_.features.empty()) {
-        ss << "  Features: ";
-        for (size_t i = 0; i < cpu_info_.features.size(); ++i) {
-            if (i > 0) {
-                ss << ", ";
-            }
-            ss << cpu_info_.features[i];
-        }
-        ss << "\n";
-    }
-    
-    ss << "  L1 Cache: " << (cpu_info_.cache_sizes[0] / 1024) << " KB\n";
-    ss << "  L2 Cache: " << (cpu_info_.cache_sizes[1] / 1024) << " KB\n";
-    ss << "  L3 Cache: " << (cpu_info_.cache_sizes[2] / (1024 * 1024)) << " MB\n";
-    
-    return ss.str();
-}
-
-double CPUStrategy::runBenchmark() {
-    if (!initialized_) {
-        return 0.0;
-    }
-    
-    // Run a simple benchmark to measure CPU performance
-    const int iterations = 10;
-    double total_score = 0.0;
-    
-    for (int i = 0; i < iterations; ++i) {
-        auto start_time = std::chrono::high_resolution_clock::now();
-        
-        // Perform a compute-intensive task
-        // TODO: Implement a more realistic benchmark
-        volatile double result = 0.0;
-        for (int j = 0; j < 10000000; ++j) {
-            result += std::sqrt(j);
-        }
-        
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        
-        // Calculate score (higher is better)
-        double score = 10000.0 / duration;
-        total_score += score;
-    }
-    
-    return total_score / iterations;
-}
-
-std::string CPUStrategy::getName() const {
-    return "CPU";
-}
-
-void CPUStrategy::logPerformance(const PerformanceMetrics& metrics) {
-    performance_metrics_.push_back(metrics);
-}
-
-int CPUStrategy::calculateOptimalThreadCount() const {
-    // Start with the number of logical cores
-    int thread_count = cpu_info_.logical_cores;
-    
-    // If hyper-threading is enabled, we might want to use fewer threads
-    // to avoid contention
-    if (cpu_info_.logical_cores > cpu_info_.physical_cores) {
-        // Use 75% of logical cores if hyper-threading is enabled
-        thread_count = std::max(cpu_info_.physical_cores, 
-                               static_cast<int>(cpu_info_.logical_cores * 0.75));
     }
     
     // Ensure we have at least one thread
     return std::max(1, thread_count);
 }
 
-//=============================================================================
-// CUDA Strategy Implementation
-//=============================================================================
-
-CUDAStrategy::CUDAStrategy(const system::GPUInfo& gpu_info)
-    : gpu_info_(gpu_info),
-      initialized_(false) {
-    cuda_impl_ = std::make_unique<cuda::MFPCUDA>();
-}
-
-bool CUDAStrategy::initialize() {
-    if (initialized_) {
-        return true;
+size_t ResourceManager::getOptimalBlockSize() const {
+    const CPUInfo& cpu_info = getCPUInfo();
+    
+    // Base block size on L1 cache size if available
+    if (cpu_info.l1_cache_size > 0) {
+        return cpu_info.l1_cache_size / 2;
     }
     
-    // Initialize CUDA implementation
-    if (!cuda_impl_->initialize(gpu_info_.device_id)) {
-        return false;
-    }
-    
-    initialized_ = true;
-    return true;
+    // Default block size
+    return 4096;
 }
 
-bool CUDAStrategy::isAvailable() const {
-    return initialized_ && cuda_impl_->isAvailable();
-}
-
-bool CUDAStrategy::runMFP(MFPMethod method, const std::string& number, std::vector<std::string>& factors) {
-    if (!initialized_ || !cuda_impl_->isAvailable()) {
-        return false;
-    }
+size_t ResourceManager::getOptimalMemoryLimit() const {
+    const MemoryInfo& memory_info = getMemoryInfo();
     
-    switch (method) {
-        case MFPMethod::METHOD_1:
-            return cuda_impl_->runMethod1(number, factors);
+    // Calculate memory limit based on allocation mode
+    double memory_percentage = 0.0;
+    
+    switch (m_mode) {
+        case AllocationMode::PERFORMANCE:
+            // Use up to 80% of available memory
+            memory_percentage = 0.8;
+            break;
             
-        case MFPMethod::METHOD_2:
-            return cuda_impl_->runMethod2(number, factors);
+        case AllocationMode::MEMORY:
+            // Use up to 40% of available memory
+            memory_percentage = 0.4;
+            break;
             
-        case MFPMethod::METHOD_3:
-            return cuda_impl_->runMethod3(number, factors);
+        case AllocationMode::BALANCED:
+            // Use up to 60% of available memory
+            memory_percentage = 0.6;
+            break;
             
-        case MFPMethod::AUTO:
-            // For AUTO, choose the best method based on number size
-            if (number.size() < 100) {
-                // For small numbers, use Method 1
-                return cuda_impl_->runMethod1(number, factors);
-            } else if (number.size() < 1000) {
-                // For medium numbers, use Method 2
-                return cuda_impl_->runMethod2(number, factors);
+        case AllocationMode::AUTO:
+            // Adjust based on available memory
+            if (memory_info.total_physical_memory > 16ULL * 1024 * 1024 * 1024) {
+                // High memory system (>16GB)
+                memory_percentage = 0.7;
+            } else if (memory_info.total_physical_memory > 8ULL * 1024 * 1024 * 1024) {
+                // Medium memory system (8-16GB)
+                memory_percentage = 0.6;
+            } else if (memory_info.total_physical_memory > 4ULL * 1024 * 1024 * 1024) {
+                // Low memory system (4-8GB)
+                memory_percentage = 0.5;
             } else {
-                // For large numbers, use Method 3
-                return cuda_impl_->runMethod3(number, factors);
+                // Very low memory system (<4GB)
+                memory_percentage = 0.4;
             }
+            break;
     }
     
-    return false;
+    // Calculate memory limit
+    return static_cast<size_t>(memory_info.available_physical_memory * memory_percentage);
 }
 
-bool CUDAStrategy::isPrime(const std::string& number) {
-    if (!initialized_ || !cuda_impl_->isAvailable()) {
-        return false;
-    }
-    
-    return cuda_impl_->isPrime(number);
+bool ResourceManager::isCUDAAvailable() const {
+    return m_gpu_detector.hasCUDAGPU();
 }
 
-std::string CUDAStrategy::findNextPrime(const std::string& number) {
-    if (!initialized_ || !cuda_impl_->isAvailable()) {
-        return "";
-    }
-    
-    return cuda_impl_->findNextPrime(number);
+bool ResourceManager::isMetalAvailable() const {
+    return m_gpu_detector.hasMetalGPU();
 }
 
-bool CUDAStrategy::findPrimeFactors(const std::string& number, std::vector<std::string>& factors) {
-    if (!initialized_ || !cuda_impl_->isAvailable()) {
-        return false;
-    }
-    
-    return cuda_impl_->findPrimeFactors(number, factors);
+std::shared_ptr<CUDAAccelerator> ResourceManager::getCUDAAccelerator() {
+    return m_cuda_accelerator;
 }
 
-std::string CUDAStrategy::getPerformanceMetrics() const {
-    if (!initialized_ || !cuda_impl_->isAvailable()) {
-        return "No performance metrics available for CUDA strategy";
-    }
-    
-    return cuda_impl_->getPerformanceMetrics();
+std::shared_ptr<MetalAccelerator> ResourceManager::getMetalAccelerator() {
+    return m_metal_accelerator;
 }
 
-std::string CUDAStrategy::getDeviceInfo() const {
-    std::stringstream ss;
-    ss << "CUDA GPU: " << gpu_info_.name << "\n";
-    ss << "  Vendor: " << system::GPUVendorToString(gpu_info_.vendor) << "\n";
-    ss << "  Architecture: " << system::GPUArchitectureToString(gpu_info_.architecture) << "\n";
-    
-    if (!gpu_info_.api_support.empty()) {
-        ss << "  API Support: ";
-        for (size_t i = 0; i < gpu_info_.api_support.size(); ++i) {
-            if (i > 0) {
-                ss << ", ";
+std::unique_ptr<MFPBase> ResourceManager::createMFP(int method_number) {
+    // Create MFP implementation based on current strategy
+    switch (m_strategy) {
+        case ExecutionStrategy::CPU_ONLY:
+            // Create CPU-only implementation
+            return createMFPMethod(method_number);
+            
+        case ExecutionStrategy::CUDA_GPU:
+            // Create CUDA implementation if available
+            if (m_cuda_accelerator) {
+                return createCUDAMFP(method_number);
             }
-            ss << system::GPUAPISupportToString(gpu_info_.api_support[i]);
-        }
-        ss << "\n";
-    }
-    
-    ss << "  Memory: " << (gpu_info_.memory_info.total_memory_bytes / (1024 * 1024 * 1024)) << " GB\n";
-    ss << "  Memory Bandwidth: " << gpu_info_.memory_info.memory_bandwidth_gbps << " GB/s\n";
-    ss << "  CUDA Cores: " << gpu_info_.compute_info.cuda_cores << "\n";
-    ss << "  Core Clock: " << gpu_info_.compute_info.core_clock_mhz << " MHz\n";
-    ss << "  Compute Capability: " << gpu_info_.compute_info.cuda_compute_capability << "\n";
-    ss << "  Theoretical Performance: " << gpu_info_.compute_info.theoretical_tflops_fp32 << " TFLOPS (FP32)\n";
-    
-    return ss.str();
-}
-
-double CUDAStrategy::runBenchmark() {
-    if (!initialized_ || !cuda_impl_->isAvailable()) {
-        return 0.0;
-    }
-    
-    // Run a simple benchmark to measure CUDA performance
-    const int iterations = 5;
-    double total_score = 0.0;
-    
-    for (int i = 0; i < iterations; ++i) {
-        auto start_time = std::chrono::high_resolution_clock::now();
-        
-        // Perform a compute-intensive task on GPU
-        // TODO: Implement a more realistic benchmark
-        std::vector<std::string> factors;
-        std::string test_number = "1234567890123456789012345678901234567890";
-        cuda_impl_->runMethod3(test_number, factors);
-        
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        
-        // Calculate score (higher is better)
-        double score = 10000.0 / duration;
-        total_score += score;
-    }
-    
-    return total_score / iterations;
-}
-
-std::string CUDAStrategy::getName() const {
-    return "CUDA";
-}
-
-//=============================================================================
-// Metal Strategy Implementation
-//=============================================================================
-
-MetalStrategy::MetalStrategy(const system::GPUInfo& gpu_info)
-    : gpu_info_(gpu_info),
-      initialized_(false) {
-    metal_impl_ = std::make_unique<metal::MFPMetal>();
-}
-
-bool MetalStrategy::initialize() {
-    if (initialized_) {
-        return true;
-    }
-    
-    // Initialize Metal implementation
-    if (!metal_impl_->initialize(gpu_info_.device_id)) {
-        return false;
-    }
-    
-    initialized_ = true;
-    return true;
-}
-
-bool MetalStrategy::isAvailable() const {
-    return initialized_ && metal_impl_->isAvailable();
-}
-
-bool MetalStrategy::runMFP(MFPMethod method, const std::string& number, std::vector<std::string>& factors) {
-    if (!initialized_ || !metal_impl_->isAvailable()) {
-        return false;
-    }
-    
-    switch (method) {
-        case MFPMethod::METHOD_1:
-            return metal_impl_->runMethod1(number, factors);
+            // Fall back to CPU if CUDA is not available
+            return createMFPMethod(method_number);
             
-        case MFPMethod::METHOD_2:
-            return metal_impl_->runMethod2(number, factors);
+        case ExecutionStrategy::METAL_GPU:
+            // Create Metal implementation if available
+            if (m_metal_accelerator) {
+                return createMetalMFP(method_number);
+            }
+            // Fall back to CPU if Metal is not available
+            return createMFPMethod(method_number);
             
-        case MFPMethod::METHOD_3:
-            return metal_impl_->runMethod3(number, factors);
-            
-        case MFPMethod::AUTO:
-            // For AUTO, choose the best method based on number size
-            if (number.size() < 100) {
-                // For small numbers, use Method 1
-                return metal_impl_->runMethod1(number, factors);
-            } else if (number.size() < 1000) {
-                // For medium numbers, use Method 2
-                return metal_impl_->runMethod2(number, factors);
+        case ExecutionStrategy::HYBRID:
+            // Create hybrid implementation (not implemented yet)
+            // For now, fall back to the best available option
+            if (m_cuda_accelerator) {
+                return createCUDAMFP(method_number);
+            } else if (m_metal_accelerator) {
+                return createMetalMFP(method_number);
             } else {
-                // For large numbers, use Method 3
-                return metal_impl_->runMethod3(number, factors);
+                return createMFPMethod(method_number);
             }
+            
+        case ExecutionStrategy::AUTO:
+        default:
+            // Use the strategy determined by determineOptimalStrategy()
+            return createMFP(method_number);
     }
-    
-    return false;
 }
 
-bool MetalStrategy::isPrime(const std::string& number) {
-    if (!initialized_ || !metal_impl_->isAvailable()) {
-        return false;
-    }
+void ResourceManager::runBenchmark() {
+    // Create a large number for benchmarking
+    mpz_t number;
+    mpz_init(number);
     
-    return metal_impl_->isPrime(number);
+    // Generate a random 1000-bit number
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
+    gmp_randseed_ui(state, static_cast<unsigned long>(std::time(nullptr)));
+    mpz_urandomb(number, state, 1000);
+    gmp_randclear(state);
+    
+    // Run benchmark to determine best strategy
+    ExecutionStrategy best_strategy = benchmarkStrategies(number);
+    
+    // Set the strategy
+    m_strategy = best_strategy;
+    
+    // Clean up
+    mpz_clear(number);
 }
 
-std::string MetalStrategy::findNextPrime(const std::string& number) {
-    if (!initialized_ || !metal_impl_->isAvailable()) {
-        return "";
-    }
-    
-    return metal_impl_->findNextPrime(number);
-}
-
-bool MetalStrategy::findPrimeFactors(const std::string& number, std::vector<std::string>& factors) {
-    if (!initialized_ || !metal_impl_->isAvailable()) {
-        return false;
-    }
-    
-    return metal_impl_->findPrimeFactors(number, factors);
-}
-
-std::string MetalStrategy::getPerformanceMetrics() const {
-    if (!initialized_ || !metal_impl_->isAvailable()) {
-        return "No performance metrics available for Metal strategy";
-    }
-    
-    return metal_impl_->getPerformanceMetrics();
-}
-
-std::string MetalStrategy::getDeviceInfo() const {
+std::string ResourceManager::getSystemSummary() const {
     std::stringstream ss;
-    ss << "Metal GPU: " << gpu_info_.name << "\n";
-    ss << "  Vendor: " << system::GPUVendorToString(gpu_info_.vendor) << "\n";
-    ss << "  Architecture: " << system::GPUArchitectureToString(gpu_info_.architecture) << "\n";
     
-    if (!gpu_info_.api_support.empty()) {
-        ss << "  API Support: ";
-        for (size_t i = 0; i < gpu_info_.api_support.size(); ++i) {
-            if (i > 0) {
-                ss << ", ";
-            }
-            ss << system::GPUAPISupportToString(gpu_info_.api_support[i]);
-        }
-        ss << "\n";
-    }
-    
-    ss << "  Memory: " << (gpu_info_.memory_info.total_memory_bytes / (1024 * 1024 * 1024)) << " GB\n";
-    
-    if (gpu_info_.memory_info.has_unified_memory) {
-        ss << "  Unified Memory: Yes\n";
-    } else {
-        ss << "  Unified Memory: No\n";
-    }
-    
-    ss << "  Max Threads Per Threadgroup: " << gpu_info_.compute_info.max_threads_per_threadgroup << "\n";
-    
-    if (gpu_info_.is_integrated) {
-        ss << "  Type: Integrated\n";
-    } else {
-        ss << "  Type: Discrete\n";
-    }
-    
-    return ss.str();
-}
-
-double MetalStrategy::runBenchmark() {
-    if (!initialized_ || !metal_impl_->isAvailable()) {
-        return 0.0;
-    }
-    
-    // Run a simple benchmark to measure Metal performance
-    const int iterations = 5;
-    double total_score = 0.0;
-    
-    for (int i = 0; i < iterations; ++i) {
-        auto start_time = std::chrono::high_resolution_clock::now();
-        
-        // Perform a compute-intensive task on GPU
-        // TODO: Implement a more realistic benchmark
-        std::vector<std::string> factors;
-        std::string test_number = "1234567890123456789012345678901234567890";
-        metal_impl_->runMethod3(test_number, factors);
-        
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-        
-        // Calculate score (higher is better)
-        double score = 10000.0 / duration;
-        total_score += score;
-    }
-    
-    return total_score / iterations;
-}
-
-std::string MetalStrategy::getName() const {
-    return "Metal";
-}
-
-//=============================================================================
-// Hybrid Strategy Implementation
-//=============================================================================
-
-HybridStrategy::HybridStrategy(std::shared_ptr<CPUStrategy> cpu_strategy, 
-                             std::shared_ptr<ExecutionStrategy> gpu_strategy)
-    : cpu_strategy_(cpu_strategy),
-      gpu_strategy_(gpu_strategy),
-      initialized_(false),
-      cpu_workload_ratio_(0.3),
-      gpu_workload_ratio_(0.7) {
-}
-
-bool HybridStrategy::initialize() {
-    if (initialized_) {
-        return true;
-    }
-    
-    // Initialize both CPU and GPU strategies
-    if (!cpu_strategy_->initialize() || !gpu_strategy_->initialize()) {
-        return false;
-    }
-    
-    // Optimize work distribution between CPU and GPU
-    optimizeWorkDistribution();
-    
-    initialized_ = true;
-    return true;
-}
-
-bool HybridStrategy::isAvailable() const {
-    return initialized_ && cpu_strategy_->isAvailable() && gpu_strategy_->isAvailable();
-}
-
-bool HybridStrategy::runMFP(MFPMethod method, const std::string& number, std::vector<std::string>& factors) {
-    if (!initialized_ || !cpu_strategy_->isAvailable() || !gpu_strategy_->isAvailable()) {
-        return false;
-    }
-    
-    // For hybrid strategy, we'll split the work between CPU and GPU
-    // This is a simplified implementation; a real implementation would
-    // divide the work more intelligently
-    
-    // For now, we'll just use the GPU strategy for simplicity
-    return gpu_strategy_->runMFP(method, number, factors);
-}
-
-bool HybridStrategy::isPrime(const std::string& number) {
-    if (!initialized_ || !cpu_strategy_->isAvailable() || !gpu_strategy_->isAvailable()) {
-        return false;
-    }
-    
-    // For isPrime, we'll use the GPU strategy as it's likely faster
-    return gpu_strategy_->isPrime(number);
-}
-
-std::string HybridStrategy::findNextPrime(const std::string& number) {
-    if (!initialized_ || !cpu_strategy_->isAvailable() || !gpu_strategy_->isAvailable()) {
-        return "";
-    }
-    
-    // For findNextPrime, we'll use the GPU strategy as it's likely faster
-    return gpu_strategy_->findNextPrime(number);
-}
-
-bool HybridStrategy::findPrimeFactors(const std::string& number, std::vector<std::string>& factors) {
-    if (!initialized_ || !cpu_strategy_->isAvailable() || !gpu_strategy_->isAvailable()) {
-        return false;
-    }
-    
-    // For findPrimeFactors, we'll use the GPU strategy as it's likely faster
-    return gpu_strategy_->findPrimeFactors(number, factors);
-}
-
-std::string HybridStrategy::getPerformanceMetrics() const {
-    if (!initialized_ || !cpu_strategy_->isAvailable() || !gpu_strategy_->isAvailable()) {
-        return "No performance metrics available for Hybrid strategy";
-    }
-    
-    std::stringstream ss;
-    ss << "Hybrid Strategy Performance Metrics:\n";
-    ss << "CPU Workload Ratio: " << (cpu_workload_ratio_ * 100.0) << "%\n";
-    ss << "GPU Workload Ratio: " << (gpu_workload_ratio_ * 100.0) << "%\n\n";
-    
-    ss << "CPU Strategy Metrics:\n";
-    ss << cpu_strategy_->getPerformanceMetrics() << "\n";
-    
-    ss << "GPU Strategy Metrics:\n";
-    ss << gpu_strategy_->getPerformanceMetrics();
-    
-    return ss.str();
-}
-
-std::string HybridStrategy::getDeviceInfo() const {
-    std::stringstream ss;
-    ss << "Hybrid Strategy Device Information:\n";
-    ss << "CPU Device:\n";
-    ss << cpu_strategy_->getDeviceInfo() << "\n";
-    
-    ss << "GPU Device:\n";
-    ss << gpu_strategy_->getDeviceInfo();
-    
-    return ss.str();
-}
-
-double HybridStrategy::runBenchmark() {
-    if (!initialized_ || !cpu_strategy_->isAvailable() || !gpu_strategy_->isAvailable()) {
-        return 0.0;
-    }
-    
-    // Run benchmarks on both CPU and GPU
-    double cpu_score = cpu_strategy_->runBenchmark();
-    double gpu_score = gpu_strategy_->runBenchmark();
-    
-    // Calculate weighted score based on workload ratios
-    return (cpu_score * cpu_workload_ratio_) + (gpu_score * gpu_workload_ratio_);
-}
-
-std::string HybridStrategy::getName() const {
-    return "Hybrid (" + cpu_strategy_->getName() + " + " + gpu_strategy_->getName() + ")";
-}
-
-void HybridStrategy::optimizeWorkDistribution() {
-    // Run benchmarks on both CPU and GPU
-    double cpu_score = cpu_strategy_->runBenchmark();
-    double gpu_score = gpu_strategy_->runBenchmark();
-    
-    // Calculate workload ratios based on relative performance
-    double total_score = cpu_score + gpu_score;
-    
-    if (total_score > 0) {
-        cpu_workload_ratio_ = cpu_score / total_score;
-        gpu_workload_ratio_ = gpu_score / total_score;
-    } else {
-        // Default to 30% CPU, 70% GPU if benchmarks fail
-        cpu_workload_ratio_ = 0.3;
-        gpu_workload_ratio_ = 0.7;
-    }
-}
-
-//=============================================================================
-// Resource Manager Implementation
-//=============================================================================
-
-ResourceManager::ResourceManager()
-    : allocation_mode_(AllocationMode::AUTO),
-      mfp_method_(MFPMethod::AUTO),
-      performance_logging_enabled_(false) {
-}
-
-ResourceManager::~ResourceManager() {
-    releaseResources();
-}
-
-bool ResourceManager::initialize() {
-    // Detect system capabilities
-    if (!detectSystemCapabilities()) {
-        return false;
-    }
-    
-    return true;
-}
-
-void ResourceManager::setAllocationMode(AllocationMode mode) {
-    allocation_mode_ = mode;
-    
-    // If we already have a strategy, we need to release it and create a new one
-    if (current_strategy_) {
-        releaseResources();
-    }
-}
-
-AllocationMode ResourceManager::getAllocationMode() const {
-    return allocation_mode_;
-}
-
-void ResourceManager::setMFPMethod(MFPMethod method) {
-    mfp_method_ = method;
-}
-
-MFPMethod ResourceManager::getMFPMethod() const {
-    return mfp_method_;
-}
-
-void ResourceManager::setPerformanceLogging(bool enable) {
-    performance_logging_enabled_ = enable;
-    
-    // Update performance logging for current strategy
-    if (current_strategy_) {
-        if (cpu_strategy_) {
-            // TODO: Set performance logging for CPU strategy
-        }
-        
-        if (cuda_strategy_) {
-            // TODO: Set performance logging for CUDA strategy
-        }
-        
-        if (metal_strategy_) {
-            // TODO: Set performance logging for Metal strategy
-        }
-    }
-}
-
-bool ResourceManager::getPerformanceLogging() const {
-    return performance_logging_enabled_;
-}
-
-AllocationResult ResourceManager::allocateResources(size_t required_memory_bytes) {
-    AllocationResult result;
-    result.success = false;
-    
-    // Select the best strategy based on allocation mode and system capabilities
-    std::shared_ptr<ExecutionStrategy> strategy;
-    
-    if (allocation_mode_ == AllocationMode::AUTO) {
-        strategy = selectBestStrategy(required_memory_bytes);
-    } else {
-        strategy = createStrategyForMode(allocation_mode_);
-    }
-    
-    if (!strategy) {
-        result.error_message = "Failed to create execution strategy";
-        return result;
-    }
-    
-    // Initialize the strategy
-    if (!strategy->initialize()) {
-        result.error_message = "Failed to initialize execution strategy";
-        return result;
-    }
-    
-    // Set the current strategy
-    current_strategy_ = strategy;
-    
-    // Fill in allocation result
-    result.success = true;
-    result.device_name = strategy->getDeviceInfo();
-    result.device_type = strategy->getName();
-    
-    // TODO: Fill in cores_or_compute_units and memory_allocated_bytes
-    
-    return result;
-}
-
-void ResourceManager::releaseResources() {
-    // Release current strategy
-    current_strategy_.reset();
-    
-    // Release all strategies
-    cpu_strategy_.reset();
-    cuda_strategy_.reset();
-    metal_strategy_.reset();
-    hybrid_strategy_.reset();
-}
-
-bool ResourceManager::runMFP(const std::string& number, std::vector<std::string>& factors) {
-    if (!current_strategy_) {
-        // Allocate resources if not already allocated
-        AllocationResult result = allocateResources();
-        if (!result.success) {
-            return false;
-        }
-    }
-    
-    // Run MFP with the current strategy
-    return current_strategy_->runMFP(mfp_method_, number, factors);
-}
-
-bool ResourceManager::isPrime(const std::string& number) {
-    if (!current_strategy_) {
-        // Allocate resources if not already allocated
-        AllocationResult result = allocateResources();
-        if (!result.success) {
-            return false;
-        }
-    }
-    
-    // Check if number is prime with the current strategy
-    return current_strategy_->isPrime(number);
-}
-
-std::string ResourceManager::findNextPrime(const std::string& number) {
-    if (!current_strategy_) {
-        // Allocate resources if not already allocated
-        AllocationResult result = allocateResources();
-        if (!result.success) {
-            return "";
-        }
-    }
-    
-    // Find next prime with the current strategy
-    return current_strategy_->findNextPrime(number);
-}
-
-bool ResourceManager::findPrimeFactors(const std::string& number, std::vector<std::string>& factors) {
-    if (!current_strategy_) {
-        // Allocate resources if not already allocated
-        AllocationResult result = allocateResources();
-        if (!result.success) {
-            return false;
-        }
-    }
-    
-    // Find prime factors with the current strategy
-    return current_strategy_->findPrimeFactors(number, factors);
-}
-
-std::string ResourceManager::getPerformanceMetrics() const {
-    if (!current_strategy_) {
-        return "No performance metrics available (no active strategy)";
-    }
-    
-    return current_strategy_->getPerformanceMetrics();
-}
-
-std::string ResourceManager::getSystemInfo() const {
-    std::stringstream ss;
+    ss << "System Summary:" << std::endl;
+    ss << "================" << std::endl;
     
     // CPU information
-    ss << "CPU Information:\n";
-    ss << "  Model: " << cpu_info_.model_name << "\n";
-    ss << "  Architecture: " << cpu_info_.architecture << "\n";
-    ss << "  Physical Cores: " << cpu_info_.physical_cores << "\n";
-    ss << "  Logical Cores: " << cpu_info_.logical_cores << "\n";
-    ss << "  Base Frequency: " << cpu_info_.base_frequency_mhz << " MHz\n";
-    
-    if (!cpu_info_.features.empty()) {
-        ss << "  Features: ";
-        for (size_t i = 0; i < cpu_info_.features.size(); ++i) {
-            if (i > 0) {
-                ss << ", ";
-            }
-            ss << cpu_info_.features[i];
-        }
-        ss << "\n";
-    }
-    
-    ss << "\n";
+    const CPUInfo& cpu_info = getCPUInfo();
+    ss << "CPU:" << std::endl;
+    ss << "  Model: " << cpu_info.model_name << std::endl;
+    ss << "  Architecture: " << cpu_info.architecture << std::endl;
+    ss << "  Physical cores: " << cpu_info.physical_cores << std::endl;
+    ss << "  Logical cores: " << cpu_info.logical_cores << std::endl;
+    ss << "  Hyperthreading: " << (cpu_info.has_hyperthreading ? "Yes" : "No") << std::endl;
+    ss << "  Features: ";
+    if (cpu_info.has_avx) ss << "AVX ";
+    if (cpu_info.has_avx2) ss << "AVX2 ";
+    if (cpu_info.has_avx512) ss << "AVX512 ";
+    if (cpu_info.has_sse4) ss << "SSE4 ";
+    ss << std::endl;
     
     // Memory information
-    ss << "Memory Information:\n";
-    ss << "  Total Memory: " << (memory_info_.total_memory_bytes / (1024 * 1024 * 1024)) << " GB\n";
-    ss << "  Available Memory: " << (memory_info_.available_memory_bytes / (1024 * 1024 * 1024)) << " GB\n";
+    const MemoryInfo& memory_info = getMemoryInfo();
+    ss << "Memory:" << std::endl;
+    ss << "  Total physical memory: " << (memory_info.total_physical_memory / (1024 * 1024 * 1024)) << " GB" << std::endl;
+    ss << "  Available physical memory: " << (memory_info.available_physical_memory / (1024 * 1024 * 1024)) << " GB" << std::endl;
+    ss << "  Total virtual memory: " << (memory_info.total_virtual_memory / (1024 * 1024 * 1024)) << " GB" << std::endl;
+    ss << "  Available virtual memory: " << (memory_info.available_virtual_memory / (1024 * 1024 * 1024)) << " GB" << std::endl;
     
-    if (memory_info_.memory_type != system::MemoryType::UNKNOWN) {
-        ss << "  Memory Type: " << system::MemoryTypeToString(memory_info_.memory_type) << "\n";
-    }
-    
-    if (memory_info_.memory_speed_mhz > 0) {
-        ss << "  Memory Speed: " << memory_info_.memory_speed_mhz << " MHz\n";
-    }
-    
-    ss << "\n";
+    // Storage information
+    const StorageInfo& storage_info = getStorageInfo();
+    ss << "Storage:" << std::endl;
+    ss << "  Primary storage type: " << storage_info.primary_storage_type << std::endl;
+    ss << "  Primary storage capacity: " << (storage_info.primary_storage_capacity / (1024 * 1024 * 1024)) << " GB" << std::endl;
+    ss << "  Primary storage available: " << (storage_info.primary_storage_available / (1024 * 1024 * 1024)) << " GB" << std::endl;
     
     // GPU information
-    ss << "GPU Information:\n";
-    
-    if (gpu_info_.empty()) {
-        ss << "  No GPUs detected\n";
+    const std::vector<GPUInfo>& gpus = getGPUs();
+    ss << "GPUs:" << std::endl;
+    if (gpus.empty()) {
+        ss << "  No GPUs detected" << std::endl;
     } else {
-        for (size_t i = 0; i < gpu_info_.size(); ++i) {
-            const auto& gpu = gpu_info_[i];
-            
-            ss << "  GPU " << i << ": " << gpu.name << "\n";
-            ss << "    Vendor: " << system::GPUVendorToString(gpu.vendor) << "\n";
-            ss << "    Architecture: " << system::GPUArchitectureToString(gpu.architecture) << "\n";
-            
-            if (!gpu.api_support.empty()) {
-                ss << "    API Support: ";
-                for (size_t j = 0; j < gpu.api_support.size(); ++j) {
-                    if (j > 0) {
-                        ss << ", ";
-                    }
-                    ss << system::GPUAPISupportToString(gpu.api_support[j]);
-                }
-                ss << "\n";
+        for (size_t i = 0; i < gpus.size(); i++) {
+            ss << "  GPU " << i << ":" << std::endl;
+            ss << "    Name: " << gpus[i].getName() << std::endl;
+            ss << "    Vendor: ";
+            switch (gpus[i].getVendor()) {
+                case GPUVendor::NVIDIA: ss << "NVIDIA"; break;
+                case GPUVendor::AMD: ss << "AMD"; break;
+                case GPUVendor::INTEL: ss << "Intel"; break;
+                case GPUVendor::APPLE: ss << "Apple"; break;
+                default: ss << "Unknown"; break;
             }
+            ss << std::endl;
             
-            ss << "    Memory: " << (gpu.memory_info.total_memory_bytes / (1024 * 1024 * 1024)) << " GB\n";
+            ss << "    APIs: ";
+            const GPUAPIs& apis = gpus[i].getAPIs();
+            if (apis.supports_cuda) ss << "CUDA ";
+            if (apis.supports_opencl) ss << "OpenCL ";
+            if (apis.supports_metal) ss << "Metal ";
+            if (apis.supports_directx) ss << "DirectX ";
+            if (apis.supports_vulkan) ss << "Vulkan ";
+            ss << std::endl;
             
-            if (gpu.vendor == system::GPUVendor::NVIDIA) {
-                ss << "    CUDA Cores: " << gpu.compute_info.cuda_cores << "\n";
-                ss << "    Compute Capability: " << gpu.compute_info.cuda_compute_capability << "\n";
-            }
-            
-            if (gpu.is_integrated) {
-                ss << "    Type: Integrated\n";
-            } else {
-                ss << "    Type: Discrete\n";
-            }
-            
-            ss << "\n";
+            ss << "    Memory: " << (gpus[i].getMemory().total_memory_bytes / (1024 * 1024 * 1024)) << " GB" << std::endl;
         }
     }
     
-    // Current allocation mode
-    ss << "Current Allocation Mode: ";
-    switch (allocation_mode_) {
-        case AllocationMode::AUTO:
-            ss << "AUTO (Automatic Selection)";
-            break;
-            
-        case AllocationMode::CPU_ONLY:
-            ss << "CPU_ONLY";
-            break;
-            
-        case AllocationMode::GPU_ONLY:
-            ss << "GPU_ONLY";
-            break;
-            
-        case AllocationMode::CUDA_ONLY:
-            ss << "CUDA_ONLY";
-            break;
-            
-        case AllocationMode::METAL_ONLY:
-            ss << "METAL_ONLY";
-            break;
-            
-        case AllocationMode::HYBRID:
-            ss << "HYBRID";
-            break;
+    // Current configuration
+    ss << "Configuration:" << std::endl;
+    ss << "  Execution strategy: ";
+    switch (m_strategy) {
+        case ExecutionStrategy::AUTO: ss << "Auto"; break;
+        case ExecutionStrategy::CPU_ONLY: ss << "CPU only"; break;
+        case ExecutionStrategy::CUDA_GPU: ss << "CUDA GPU"; break;
+        case ExecutionStrategy::METAL_GPU: ss << "Metal GPU"; break;
+        case ExecutionStrategy::HYBRID: ss << "Hybrid"; break;
     }
-    ss << "\n";
+    ss << std::endl;
     
-    // Current MFP method
-    ss << "Current MFP Method: ";
-    switch (mfp_method_) {
-        case MFPMethod::AUTO:
-            ss << "AUTO (Automatic Selection)";
-            break;
-            
-        case MFPMethod::METHOD_1:
-            ss << "METHOD_1 (Expanded q Factorization)";
-            break;
-            
-        case MFPMethod::METHOD_2:
-            ss << "METHOD_2 (Ultrafast with Structural Filter)";
-            break;
-            
-        case MFPMethod::METHOD_3:
-            ss << "METHOD_3 (Parallelized with Dynamic Blocks)";
-            break;
+    ss << "  Allocation mode: ";
+    switch (m_mode) {
+        case AllocationMode::AUTO: ss << "Auto"; break;
+        case AllocationMode::PERFORMANCE: ss << "Performance"; break;
+        case AllocationMode::MEMORY: ss << "Memory"; break;
+        case AllocationMode::BALANCED: ss << "Balanced"; break;
     }
-    ss << "\n";
+    ss << std::endl;
     
-    // Performance logging
-    ss << "Performance Logging: " << (performance_logging_enabled_ ? "Enabled" : "Disabled") << "\n";
+    ss << "  Optimal thread count: " << getOptimalThreadCount() << std::endl;
+    ss << "  Optimal block size: " << getOptimalBlockSize() << " bytes" << std::endl;
+    ss << "  Optimal memory limit: " << (getOptimalMemoryLimit() / (1024 * 1024)) << " MB" << std::endl;
     
     return ss.str();
 }
 
-BenchmarkResult ResourceManager::runBenchmark() {
-    BenchmarkResult result;
-    result.cpu_score = 0.0;
-    result.cuda_score = 0.0;
-    result.metal_score = 0.0;
-    
-    // Initialize CPU strategy if not already initialized
-    if (!cpu_strategy_) {
-        cpu_strategy_ = std::make_shared<CPUStrategy>(cpu_info_, memory_info_);
-        cpu_strategy_->initialize();
-    }
-    
-    // Run CPU benchmark
-    if (cpu_strategy_->isAvailable()) {
-        result.cpu_score = cpu_strategy_->runBenchmark();
-    }
-    
-    // Initialize CUDA strategy if not already initialized
-    if (!cuda_strategy_ && !gpu_info_.empty()) {
-        // Find NVIDIA GPU
-        for (const auto& gpu : gpu_info_) {
-            if (gpu.vendor == system::GPUVendor::NVIDIA) {
-                cuda_strategy_ = std::make_shared<CUDAStrategy>(gpu);
-                cuda_strategy_->initialize();
-                break;
-            }
-        }
-    }
-    
-    // Run CUDA benchmark
-    if (cuda_strategy_ && cuda_strategy_->isAvailable()) {
-        result.cuda_score = cuda_strategy_->runBenchmark();
-    }
-    
-    // Initialize Metal strategy if not already initialized
-    if (!metal_strategy_ && !gpu_info_.empty()) {
-        // Find Apple GPU
-        for (const auto& gpu : gpu_info_) {
-            if (gpu.vendor == system::GPUVendor::APPLE) {
-                metal_strategy_ = std::make_shared<MetalStrategy>(gpu);
-                metal_strategy_->initialize();
-                break;
-            }
-        }
-    }
-    
-    // Run Metal benchmark
-    if (metal_strategy_ && metal_strategy_->isAvailable()) {
-        result.metal_score = metal_strategy_->runBenchmark();
-    }
-    
-    // Determine best device
-    if (result.cpu_score >= result.cuda_score && result.cpu_score >= result.metal_score) {
-        result.best_device = "CPU";
-    } else if (result.cuda_score >= result.cpu_score && result.cuda_score >= result.metal_score) {
-        result.best_device = "CUDA";
-    } else {
-        result.best_device = "Metal";
-    }
-    
-    // Generate details
-    std::stringstream ss;
-    ss << "Benchmark Results:\n";
-    ss << "  CPU Score: " << std::fixed << std::setprecision(2) << result.cpu_score << "\n";
-    ss << "  CUDA Score: " << std::fixed << std::setprecision(2) << result.cuda_score << "\n";
-    ss << "  Metal Score: " << std::fixed << std::setprecision(2) << result.metal_score << "\n";
-    ss << "  Best Device: " << result.best_device << "\n";
-    
-    result.details = ss.str();
-    
-    return result;
-}
-
-std::shared_ptr<ExecutionStrategy> ResourceManager::selectBestStrategy(size_t required_memory_bytes) {
-    // Run benchmarks to determine the best strategy
-    BenchmarkResult benchmark = runBenchmark();
-    
-    // Select the best strategy based on benchmark results
-    if (benchmark.best_device == "CPU") {
-        return cpu_strategy_;
-    } else if (benchmark.best_device == "CUDA") {
-        return cuda_strategy_;
-    } else if (benchmark.best_device == "Metal") {
-        return metal_strategy_;
-    } else {
-        // Default to CPU if no clear winner
-        return cpu_strategy_;
-    }
-}
-
-std::shared_ptr<ExecutionStrategy> ResourceManager::createStrategyForMode(AllocationMode mode) {
-    switch (mode) {
-        case AllocationMode::CPU_ONLY:
-            if (!cpu_strategy_) {
-                cpu_strategy_ = std::make_shared<CPUStrategy>(cpu_info_, memory_info_);
-            }
-            return cpu_strategy_;
-            
-        case AllocationMode::GPU_ONLY:
-            // Try CUDA first, then Metal
-            if (cuda_strategy_ && cuda_strategy_->isAvailable()) {
-                return cuda_strategy_;
-            } else if (metal_strategy_ && metal_strategy_->isAvailable()) {
-                return metal_strategy_;
-            } else {
-                // No GPU available, fall back to CPU
-                if (!cpu_strategy_) {
-                    cpu_strategy_ = std::make_shared<CPUStrategy>(cpu_info_, memory_info_);
-                }
-                return cpu_strategy_;
-            }
-            
-        case AllocationMode::CUDA_ONLY:
-            if (cuda_strategy_ && cuda_strategy_->isAvailable()) {
-                return cuda_strategy_;
-            } else {
-                // CUDA not available, fall back to CPU
-                if (!cpu_strategy_) {
-                    cpu_strategy_ = std::make_shared<CPUStrategy>(cpu_info_, memory_info_);
-                }
-                return cpu_strategy_;
-            }
-            
-        case AllocationMode::METAL_ONLY:
-            if (metal_strategy_ && metal_strategy_->isAvailable()) {
-                return metal_strategy_;
-            } else {
-                // Metal not available, fall back to CPU
-                if (!cpu_strategy_) {
-                    cpu_strategy_ = std::make_shared<CPUStrategy>(cpu_info_, memory_info_);
-                }
-                return cpu_strategy_;
-            }
-            
-        case AllocationMode::HYBRID:
-            // Create hybrid strategy with CPU and the best GPU
-            if (!cpu_strategy_) {
-                cpu_strategy_ = std::make_shared<CPUStrategy>(cpu_info_, memory_info_);
-            }
-            
-            if (cuda_strategy_ && cuda_strategy_->isAvailable()) {
-                if (!hybrid_strategy_) {
-                    hybrid_strategy_ = std::make_shared<HybridStrategy>(cpu_strategy_, cuda_strategy_);
-                }
-                return hybrid_strategy_;
-            } else if (metal_strategy_ && metal_strategy_->isAvailable()) {
-                if (!hybrid_strategy_) {
-                    hybrid_strategy_ = std::make_shared<HybridStrategy>(cpu_strategy_, metal_strategy_);
-                }
-                return hybrid_strategy_;
-            } else {
-                // No GPU available, fall back to CPU
-                return cpu_strategy_;
-            }
-            
-        case AllocationMode::AUTO:
-        default:
-            // This should be handled by selectBestStrategy
-            return selectBestStrategy(0);
-    }
-}
-
-MFPMethod ResourceManager::selectBestMethod(const std::string& number) {
-    // Select the best method based on number size and available resources
-    size_t number_size = number.size();
-    
-    if (number_size < 100) {
-        // For small numbers, use Method 1
-        return MFPMethod::METHOD_1;
-    } else if (number_size < 1000) {
-        // For medium numbers, use Method 2
-        return MFPMethod::METHOD_2;
-    } else {
-        // For large numbers, use Method 3
-        return MFPMethod::METHOD_3;
-    }
-}
-
-bool ResourceManager::detectSystemCapabilities() {
+void ResourceManager::detectHardware() {
     // Detect CPU capabilities
-    system::CPUDetector cpu_detector;
-    if (!cpu_detector.detect(cpu_info_)) {
-        return false;
-    }
+    m_cpu_detector.detect();
     
-    // Detect memory capabilities
-    system::MemoryStorageDetector memory_detector;
-    if (!memory_detector.detectMemory(memory_info_)) {
-        return false;
-    }
+    // Detect memory and storage capabilities
+    m_memory_storage_detector.detect();
     
     // Detect GPU capabilities
-    system::GPUDetector gpu_detector;
-    if (!gpu_detector.detect(gpu_info_)) {
-        return false;
-    }
-    
-    // Initialize strategies based on detected capabilities
-    
-    // CPU strategy
-    cpu_strategy_ = std::make_shared<CPUStrategy>(cpu_info_, memory_info_);
-    
-    // CUDA strategy (if NVIDIA GPU is available)
-    for (const auto& gpu : gpu_info_) {
-        if (gpu.vendor == system::GPUVendor::NVIDIA) {
-            cuda_strategy_ = std::make_shared<CUDAStrategy>(gpu);
-            break;
-        }
-    }
-    
-    // Metal strategy (if Apple GPU is available)
-    for (const auto& gpu : gpu_info_) {
-        if (gpu.vendor == system::GPUVendor::APPLE) {
-            metal_strategy_ = std::make_shared<MetalStrategy>(gpu);
-            break;
-        }
-    }
-    
-    return true;
+    m_gpu_detector.detect();
 }
 
-} // namespace resource
+void ResourceManager::determineOptimalStrategy() {
+    // Determine the optimal execution strategy based on available hardware
+    
+    // Check if CUDA is available
+    if (isCUDAAvailable() && m_cuda_accelerator) {
+        m_strategy = ExecutionStrategy::CUDA_GPU;
+        return;
+    }
+    
+    // Check if Metal is available
+    if (isMetalAvailable() && m_metal_accelerator) {
+        m_strategy = ExecutionStrategy::METAL_GPU;
+        return;
+    }
+    
+    // Fall back to CPU only
+    m_strategy = ExecutionStrategy::CPU_ONLY;
+}
+
+ExecutionStrategy ResourceManager::benchmarkStrategies(const mpz_t number) {
+    // Benchmark different strategies and return the fastest one
+    
+    // Initialize results
+    double cpu_time = std::numeric_limits<double>::max();
+    double cuda_time = std::numeric_limits<double>::max();
+    double metal_time = std::numeric_limits<double>::max();
+    
+    // Benchmark CPU
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        
+        // Create CPU implementation
+        auto mfp = createMFPMethod(1);  // Use method 1 for benchmarking
+        
+        // Run isPrime operation
+        bool is_prime;
+        mfp->isPrime(number, is_prime);
+        
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = end - start;
+        
+        cpu_time = elapsed.count();
+    }
+    
+    // Benchmark CUDA if available
+    if (m_cuda_accelerator) {
+        cuda_time = m_cuda_accelerator->benchmark(number);
+    }
+    
+    // Benchmark Metal if available
+    if (m_metal_accelerator) {
+        metal_time = m_metal_accelerator->benchmark(number);
+    }
+    
+    // Determine the fastest strategy
+    if (cuda_time < cpu_time && cuda_time < metal_time) {
+        return ExecutionStrategy::CUDA_GPU;
+    } else if (metal_time < cpu_time && metal_time < cuda_time) {
+        return ExecutionStrategy::METAL_GPU;
+    } else {
+        return ExecutionStrategy::CPU_ONLY;
+    }
+}
+
+// Global resource manager instance
+ResourceManager& getResourceManager() {
+    return s_instance;
+}
+
 } // namespace mfp

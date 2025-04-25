@@ -1,202 +1,160 @@
 #include "mfp_method1.h"
-#include <chrono>
 #include <gmp.h>
-#include <vector>
+#include <iostream>
+#include <cmath>
 
 namespace mfp {
 
-MFPMethod1::MFPMethod1(int num_threads) : num_threads_(num_threads) {
-    // Initialize method-specific parameters
+MFPMethod1::MFPMethod1() {
+    // Initialize Method 1 (Expanded q Factorization)
 }
 
 MFPMethod1::~MFPMethod1() {
-    // Clean up method-specific resources
+    // Nothing to clean up
 }
 
-bool MFPMethod1::isPrime(const mpz_t& number) {
-    // Start timer if performance logging is enabled
-    auto start_time = std::chrono::high_resolution_clock::now();
+bool MFPMethod1::isPrime(const std::string& number) {
+    // For Method 1, we'll use the base class implementation
+    // which uses Miller-Rabin for large numbers
+    return MFPBase::isPrime(number);
+}
+
+std::vector<std::string> MFPMethod1::factorize(const std::string& number) {
+    std::vector<std::string> factors;
     
-    // Check if number is small prime
-    if (isSmallPrime(number)) {
-        if (performance_logging_enabled_) {
-            auto end_time = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() / 1000000.0;
+    // If the number is prime, just return it
+    if (isPrime(number)) {
+        factors.push_back(number);
+        return factors;
+    }
+    
+    // Use the Expanded q Factorization method
+    if (expandedQFactorization(number, factors)) {
+        return factors;
+    }
+    
+    // Fallback to trial division for small numbers
+    try {
+        unsigned long n = std::stoul(number);
+        if (n <= 1000000) {
+            // Trial division for small numbers
+            if (n <= 1) {
+                return factors; // Empty for 0 and 1
+            }
             
-            metrics_.isPrime_time += duration;
-            metrics_.total_time += duration;
-            metrics_.isPrime_calls++;
-            metrics_.total_digits_processed += mpz_sizeinbase(number, 10);
-        }
-        return true;
-    }
-    
-    // Try to find a divisor
-    mpz_t divisor;
-    mpz_init(divisor);
-    
-    bool has_divisor = findDivisor(number, divisor);
-    
-    mpz_clear(divisor);
-    
-    // If performance logging is enabled, update metrics
-    if (performance_logging_enabled_) {
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() / 1000000.0;
-        
-        metrics_.isPrime_time += duration;
-        metrics_.total_time += duration;
-        metrics_.isPrime_calls++;
-        metrics_.total_digits_processed += mpz_sizeinbase(number, 10);
-    }
-    
-    return !has_divisor;
-}
-
-bool MFPMethod1::findDivisor(const mpz_t& number, mpz_t& divisor_out) {
-    // Start timer if performance logging is enabled
-    auto start_time = std::chrono::high_resolution_clock::now();
-    
-    // Check for small factors first
-    if (hasSmallFactor(number, divisor_out)) {
-        if (performance_logging_enabled_) {
-            auto end_time = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() / 1000000.0;
+            while (n % 2 == 0) {
+                factors.push_back("2");
+                n /= 2;
+            }
             
-            metrics_.findDivisor_time += duration;
-            metrics_.total_time += duration;
-            metrics_.findDivisor_calls++;
-            metrics_.total_digits_processed += mpz_sizeinbase(number, 10);
+            for (unsigned long i = 3; i * i <= n; i += 2) {
+                while (n % i == 0) {
+                    factors.push_back(std::to_string(i));
+                    n /= i;
+                }
+            }
+            
+            if (n > 1) {
+                factors.push_back(std::to_string(n));
+            }
+            
+            return factors;
         }
-        return true;
+    } catch (const std::exception& e) {
+        // Number is too large for unsigned long, continue with GMP
     }
     
-    // Apply expanded q factorization
-    bool found = expandedQFactorization(number, divisor_out);
-    
-    // If performance logging is enabled, update metrics
-    if (performance_logging_enabled_) {
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() / 1000000.0;
-        
-        metrics_.findDivisor_time += duration;
-        metrics_.total_time += duration;
-        metrics_.findDivisor_calls++;
-        metrics_.total_digits_processed += mpz_sizeinbase(number, 10);
-    }
-    
-    return found;
+    // If all else fails, just return the number itself
+    factors.push_back(number);
+    return factors;
 }
 
-bool MFPMethod1::expandedQFactorization(const mpz_t& number, mpz_t& divisor_out) {
-    // Compute q-expansion
-    std::vector<mpz_t> q_values;
-    if (!computeQExpansion(number, q_values)) {
-        // Clean up q_values
-        for (auto& q : q_values) {
-            mpz_clear(q);
-        }
-        return false;
-    }
+std::string MFPMethod1::findNextPrime(const std::string& number) {
+    // Use the base class implementation
+    return MFPBase::findNextPrime(number);
+}
+
+bool MFPMethod1::expandedQFactorization(const std::string& number, std::vector<std::string>& factors) {
+    mpz_t n, q, a, b, gcd;
+    mpz_init(n);
+    mpz_init(q);
+    mpz_init(a);
+    mpz_init(b);
+    mpz_init(gcd);
     
-    // Find pattern in q-sequence
-    bool found = findPatternInQSequence(q_values, divisor_out);
+    // Convert string to mpz_t
+    mpz_set_str(n, number.c_str(), 10);
     
-    // Clean up q_values
-    for (auto& q : q_values) {
+    // Check if n is even
+    if (mpz_even_p(n) != 0) {
+        factors.push_back("2");
+        mpz_divexact_ui(n, n, 2);
+        
+        // Convert n back to string and recursively factorize
+        char* n_str = mpz_get_str(nullptr, 10, n);
+        std::string remaining(n_str);
+        free(n_str);
+        
+        std::vector<std::string> remaining_factors = factorize(remaining);
+        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
+        
+        mpz_clear(n);
         mpz_clear(q);
+        mpz_clear(a);
+        mpz_clear(b);
+        mpz_clear(gcd);
+        
+        return true;
     }
     
-    return found;
-}
-
-bool MFPMethod1::computeQExpansion(const mpz_t& number, std::vector<mpz_t>& q_values) {
-    // Initialize q_0 = 1
-    q_values.emplace_back();
-    mpz_init_set_ui(q_values.back(), 1);
+    // Try to find q such that n = a^2 - b^2 = (a+b)(a-b)
+    mpz_sqrt(q, n);
+    mpz_add_ui(q, q, 1); // Start with q = sqrt(n) + 1
     
-    // Initialize q_1 = number - 1
-    q_values.emplace_back();
-    mpz_init(q_values.back());
-    mpz_sub_ui(q_values.back(), number, 1);
-    
-    // Compute q_i = number * q_{i-1} - q_{i-2}
-    for (int i = 2; i <= 100; i++) {
-        q_values.emplace_back();
-        mpz_init(q_values.back());
+    // Try different values of q
+    for (int i = 0; i < 1000; i++) {
+        // Calculate a^2 = q^2 - n
+        mpz_mul(a, q, q);
+        mpz_sub(a, a, n);
         
-        // q_i = number * q_{i-1} - q_{i-2}
-        mpz_mul(q_values.back(), number, q_values[i-1]);
-        mpz_sub(q_values.back(), q_values.back(), q_values[i-2]);
-        
-        // Check for overflow or other issues
-        if (mpz_sgn(q_values.back()) < 0) {
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-bool MFPMethod1::findPatternInQSequence(const std::vector<mpz_t>& q_values, mpz_t& divisor_out) {
-    // Look for patterns in the q-sequence that indicate divisibility
-    
-    // Check for common divisors between consecutive q-values
-    for (size_t i = 1; i < q_values.size(); i++) {
-        mpz_t gcd;
-        mpz_init(gcd);
-        
-        mpz_gcd(gcd, q_values[i], q_values[i-1]);
-        
-        if (mpz_cmp_ui(gcd, 1) > 0) {
-            mpz_set(divisor_out, gcd);
+        // Check if a is a perfect square
+        if (mpz_perfect_square_p(a) != 0) {
+            // Found a factorization
+            mpz_sqrt(a, a); // a = sqrt(q^2 - n)
+            
+            // b = q - a
+            mpz_sub(b, q, a);
+            
+            // First factor = q + a
+            mpz_add(gcd, q, a);
+            char* factor1 = mpz_get_str(nullptr, 10, gcd);
+            factors.push_back(std::string(factor1));
+            free(factor1);
+            
+            // Second factor = q - a
+            char* factor2 = mpz_get_str(nullptr, 10, b);
+            factors.push_back(std::string(factor2));
+            free(factor2);
+            
+            mpz_clear(n);
+            mpz_clear(q);
+            mpz_clear(a);
+            mpz_clear(b);
             mpz_clear(gcd);
+            
             return true;
         }
         
-        mpz_clear(gcd);
+        // Try next q
+        mpz_add_ui(q, q, 1);
     }
     
-    // Check for periodicity in the sequence modulo small primes
-    const unsigned int small_primes[] = {101, 103, 107, 109, 113, 127, 131, 137, 139, 149};
-    
-    for (unsigned int prime : small_primes) {
-        std::vector<unsigned int> remainders;
-        
-        for (const auto& q : q_values) {
-            remainders.push_back(mpz_fdiv_ui(q, prime));
-        }
-        
-        // Look for a repeating pattern
-        for (size_t period = 1; period <= remainders.size() / 2; period++) {
-            bool is_periodic = true;
-            
-            for (size_t i = remainders.size() - period; i < remainders.size(); i++) {
-                if (remainders[i] != remainders[i - period]) {
-                    is_periodic = false;
-                    break;
-                }
-            }
-            
-            if (is_periodic) {
-                // Found a potential divisor
-                mpz_t potential_divisor;
-                mpz_init(potential_divisor);
-                
-                // Compute the potential divisor based on the pattern
-                mpz_ui_pow_ui(potential_divisor, prime, period);
-                
-                // Verify that it's actually a divisor
-                if (mpz_divisible_p(q_values.back(), potential_divisor)) {
-                    mpz_set(divisor_out, potential_divisor);
-                    mpz_clear(potential_divisor);
-                    return true;
-                }
-                
-                mpz_clear(potential_divisor);
-            }
-        }
-    }
+    // If we get here, the method failed to find factors
+    mpz_clear(n);
+    mpz_clear(q);
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(gcd);
     
     return false;
 }

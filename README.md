@@ -1,126 +1,142 @@
-# Enhanced Modular Factorization Pattern (MFP) Implementation
+# MFP Implementation
 
-This repository contains an enhanced implementation of the Modular Factorization Pattern (MFP) algorithm created by [Marlon F. Polegato](https://www.linkedin.com/in/marlonpolegato/). The implementation includes automatic hardware detection, GPU acceleration, and dynamic configuration features.
+This repository contains an implementation of the Modular Factorization Pattern (MFP) algorithm created by [Marlon F. Polegato](https://www.linkedin.com/in/marlonpolegato/). The implementation includes automatic hardware detection, GPU acceleration, and dynamic resource allocation to optimize performance across different hardware configurations.
 
-## Overview
+## Attribution
 
-The Modular Factorization Pattern (MFP) is a mathematical algorithm for prime number identification and factorization. This enhanced implementation builds upon the original algorithm with the following improvements:
-
-- **Automatic Hardware Detection**: Detects CPU, RAM, and GPU capabilities
-- **GPU Acceleration**: Supports both NVIDIA CUDA and Apple Metal GPUs
-- **Dynamic Resource Allocation**: Automatically utilizes the best available hardware
-- **Automatic Configuration**: Optimizes settings based on detected hardware
-- **Performance Logging**: Comprehensive metrics for performance analysis
-- **Prime Number Database**: Efficient storage and retrieval of prime numbers
-
-The implementation is designed to run efficiently on a wide range of hardware, from low-end laptops to high-end servers with 32+ cores and multiple GPUs.
+The Modular Factorization Pattern (MFP) algorithm was created by **Marlon F. Polegato**. This repository only packages his algorithm for testing purposes with enhanced features for hardware detection and GPU acceleration.
 
 ## Features
 
-- **Three MFP Variants**:
+- **Three MFP Methods**:
   - Method 1: Expanded q Factorization
   - Method 2: Ultrafast with Structural Filter
   - Method 3: Parallelized with Dynamic Blocks
 
-- **Hardware Support**:
-  - Multi-core CPU utilization
-  - NVIDIA GPU acceleration via CUDA
-  - Apple GPU acceleration via Metal
-  - Hybrid CPU/GPU execution
+- **Automatic Hardware Detection**:
+  - CPU detection (architecture, cores, features)
+  - Memory and storage detection
+  - GPU detection for both NVIDIA and Apple hardware
 
-- **Performance Optimization**:
-  - Automatic thread count optimization
-  - Dynamic workload distribution
-  - Memory usage optimization
-  - Cache-aware algorithms
+- **GPU Acceleration**:
+  - CUDA implementation for NVIDIA GPUs
+  - Metal implementation for Apple GPUs
+  - Optimized kernels for all three MFP methods
 
-- **Configuration System**:
-  - Hardware-specific profiles
-  - Parameter management
-  - Configuration persistence
-  - Dynamic reconfiguration
+- **Dynamic Resource Allocation**:
+  - Automatic selection of optimal hardware
+  - Multiple execution strategies (CPU, CUDA, Metal, Hybrid)
+  - Performance benchmarking for strategy selection
+
+- **Performance Metrics**:
+  - Execution time measurement
+  - Memory usage tracking
+  - Thread utilization monitoring
+  - Detailed performance reports
 
 ## Requirements
 
 - C++17 compatible compiler
-- CMake 3.12 or higher
+- CMake 3.10 or higher
 - GMP (GNU Multiple Precision Arithmetic Library)
-- For CUDA support: CUDA Toolkit 11.0 or higher
-- For Metal support: macOS 10.15 or higher with Xcode
+- CUDA Toolkit 11.0+ (optional, for NVIDIA GPU acceleration)
+- Metal framework (optional, for Apple GPU acceleration)
 
 ## Building
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mfp-enhanced.git
-cd mfp-enhanced
+git clone https://github.com/dcharb78/polegato_mfp.git
+cd polegato_mfp
 
 # Create build directory
-mkdir build && cd build
+mkdir build
+cd build
 
 # Configure with CMake
 cmake ..
 
 # Build
 make
-
-# Run tests
-make test
 ```
 
 ## Usage
 
-### Basic Usage
+### Command-Line Interface
+
+```bash
+# Check if a number is prime
+./mfp_app isprime 104729
+
+# Factorize a number
+./mfp_app factorize 123456789
+
+# Find the next prime after a number
+./mfp_app nextprime 104729
+
+# Run a benchmark with 2000-bit numbers
+./mfp_app benchmark 2000
+
+# Display system information
+./mfp_app sysinfo
+
+# Use Method 3 with CUDA acceleration
+./mfp_app isprime 104729 --method 3 --strategy cuda
+```
+
+### API Usage
 
 ```cpp
 #include "mfp_system.h"
+#include <gmp.h>
 
 int main() {
-    // Initialize the MFP system
-    mfp::MFPSystem system;
-    system.initialize();
+    // Initialize the system
+    mfp::getResourceManager().initialize();
+    mfp::getConfigurationManager().initialize(mfp::getResourceManager());
+    
+    // Create MFP implementation (automatically selects best method and strategy)
+    auto mfp = mfp::getResourceManager().createMFP(1);
+    
+    // Enable performance metrics
+    mfp->enablePerformanceMetrics(true);
     
     // Check if a number is prime
-    std::string number = "1234567890123456789";
-    bool is_prime = system.isPrime(number);
+    mpz_t number;
+    mpz_init_set_str(number, "104729", 10);
     
-    // Find prime factors
-    std::vector<std::string> factors;
-    bool success = system.findPrimeFactors(number, factors);
+    bool is_prime;
+    mfp->isPrime(number, is_prime);
     
-    // Print factors
-    if (success) {
-        for (const auto& factor : factors) {
-            std::cout << factor << std::endl;
-        }
-    }
+    std::cout << "Is prime: " << (is_prime ? "Yes" : "No") << std::endl;
+    
+    // Get performance metrics
+    const mfp::PerformanceMetrics& metrics = mfp->getPerformanceMetrics();
+    std::cout << "Execution time: " << metrics.total_execution_time_ms << " ms" << std::endl;
+    
+    // Clean up
+    mpz_clear(number);
     
     return 0;
 }
 ```
 
-### Advanced Usage
-
-See the [documentation](docs/enhanced_capabilities.md) for advanced usage examples and API reference.
-
 ## Documentation
 
-- [Enhanced Capabilities](docs/enhanced_capabilities.md): Comprehensive documentation of the enhanced system
-- [System Architecture](docs/system_architecture.md): Detailed description of the system architecture
-- [API Reference](docs/api_reference.md): Complete API reference
-- [Performance Guide](docs/performance_guide.md): Guide to optimizing performance
-- [Original MFP Paper](docs/Modular%20Factorization%20Pattern%20M.F.P.pdf): The original MFP paper by Marlon F. Polegato
+For detailed documentation, see the following files:
+
+- [Enhanced Capabilities](docs/enhanced_capabilities.md): Comprehensive documentation of the enhanced features
+- [Original MFP Paper](Modular%20Factorization%20Pattern%20M.F.P.pdf): The original paper describing the MFP algorithm
 
 ## License
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0).
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License - see the [LICENSE](LICENSE) file for details.
 
-- You are free to use this software for academic and research purposes
-- Commercial use is prohibited without explicit permission
-- Attribution to Marlon F. Polegato as the creator of the MFP algorithm is required
+This license allows free use for academic and research purposes but prohibits commercial use. Attribution to Marlon F. Polegato is required for any use of this work.
 
 ## Acknowledgements
 
-- Marlon F. Polegato for creating the original Modular Factorization Pattern algorithm
-- The GMP development team for the GNU Multiple Precision Arithmetic Library
-- The CUDA and Metal development teams for their GPU computing frameworks
+- Marlon F. Polegato for creating the MFP algorithm
+- The GMP team for the GNU Multiple Precision Arithmetic Library
+- NVIDIA for the CUDA toolkit
+- Apple for the Metal framework

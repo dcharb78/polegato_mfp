@@ -1,571 +1,440 @@
 #include <iostream>
-#include <vector>
-#include <string>
-#include <chrono>
-#include <thread>
-#include <fstream>
-#include <iomanip>
-#include <memory>
-#include <random>
-#include <algorithm>
-
-#include "cpu_detector.h"
-#include "memory_storage_detector.h"
-#include "gpu_detector.h"
+#include <gtest/gtest.h>
+#include "mfp_base.h"
+#include "mfp_method1.h"
+#include "mfp_method2.h"
+#include "mfp_method3.h"
 #include "resource_manager.h"
 #include "configuration_manager.h"
+#include "hardware/cpu_detector.h"
+#include "hardware/memory_storage_detector.h"
+#include "hardware/gpu_detector.h"
 
-// Test case base class
-class TestCase {
-public:
-    virtual ~TestCase() = default;
-    virtual std::string getName() const = 0;
-    virtual std::string getDescription() const = 0;
-    virtual bool run() = 0;
-    virtual std::string getResults() const = 0;
-};
+namespace mfp {
+namespace test {
 
-// Hardware detection test
-class HardwareDetectionTest : public TestCase {
-public:
-    HardwareDetectionTest() {}
-    
-    std::string getName() const override {
-        return "Hardware Detection Test";
-    }
-    
-    std::string getDescription() const override {
-        return "Tests the detection of CPU, memory, storage, and GPU capabilities";
-    }
-    
-    bool run() override {
-        std::cout << "Running " << getName() << "..." << std::endl;
-        
-        // Test CPU detection
-        mfp::system::CPUDetector cpu_detector;
-        mfp::system::CPUInfo cpu_info;
-        
-        bool cpu_success = cpu_detector.detect(cpu_info);
-        results_ += "CPU Detection: " + std::string(cpu_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        if (cpu_success) {
-            results_ += "  Model: " + cpu_info.model_name + "\n";
-            results_ += "  Architecture: " + cpu_info.architecture + "\n";
-            results_ += "  Physical Cores: " + std::to_string(cpu_info.physical_cores) + "\n";
-            results_ += "  Logical Cores: " + std::to_string(cpu_info.logical_cores) + "\n";
-            results_ += "  Base Frequency: " + std::to_string(cpu_info.base_frequency_mhz) + " MHz\n";
-            
-            results_ += "  Features: ";
-            for (size_t i = 0; i < cpu_info.features.size(); ++i) {
-                if (i > 0) {
-                    results_ += ", ";
-                }
-                results_ += cpu_info.features[i];
-            }
-            results_ += "\n";
-        }
-        
-        // Test memory detection
-        mfp::system::MemoryStorageDetector memory_detector;
-        mfp::system::MemoryInfo memory_info;
-        
-        bool memory_success = memory_detector.detectMemory(memory_info);
-        results_ += "\nMemory Detection: " + std::string(memory_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        if (memory_success) {
-            results_ += "  Total Memory: " + std::to_string(memory_info.total_memory_bytes / (1024 * 1024 * 1024)) + " GB\n";
-            results_ += "  Available Memory: " + std::to_string(memory_info.available_memory_bytes / (1024 * 1024 * 1024)) + " GB\n";
-            
-            if (memory_info.memory_type != mfp::system::MemoryType::UNKNOWN) {
-                results_ += "  Memory Type: " + std::to_string(static_cast<int>(memory_info.memory_type)) + "\n";
-            }
-            
-            if (memory_info.memory_speed_mhz > 0) {
-                results_ += "  Memory Speed: " + std::to_string(memory_info.memory_speed_mhz) + " MHz\n";
-            }
-        }
-        
-        // Test storage detection
-        mfp::system::StorageInfo storage_info;
-        
-        bool storage_success = memory_detector.detectStorage(storage_info);
-        results_ += "\nStorage Detection: " + std::string(storage_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        if (storage_success) {
-            results_ += "  Total Storage: " + std::to_string(storage_info.total_bytes / (1024 * 1024 * 1024)) + " GB\n";
-            results_ += "  Available Storage: " + std::to_string(storage_info.available_bytes / (1024 * 1024 * 1024)) + " GB\n";
-            
-            results_ += "  Storage Devices:\n";
-            for (const auto& device : storage_info.devices) {
-                results_ += "    " + device.name + " (" + std::to_string(device.size_bytes / (1024 * 1024 * 1024)) + " GB)\n";
-                results_ += "      Type: " + std::to_string(static_cast<int>(device.type)) + "\n";
-                results_ += "      Read Speed: " + std::to_string(device.read_speed_mbps) + " MB/s\n";
-                results_ += "      Write Speed: " + std::to_string(device.write_speed_mbps) + " MB/s\n";
-            }
-        }
-        
-        // Test GPU detection
-        mfp::system::GPUDetector gpu_detector;
-        std::vector<mfp::system::GPUInfo> gpu_info;
-        
-        bool gpu_success = gpu_detector.detect(gpu_info);
-        results_ += "\nGPU Detection: " + std::string(gpu_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        if (gpu_success) {
-            if (gpu_info.empty()) {
-                results_ += "  No GPUs detected\n";
-            } else {
-                for (size_t i = 0; i < gpu_info.size(); ++i) {
-                    const auto& gpu = gpu_info[i];
-                    
-                    results_ += "  GPU " + std::to_string(i) + ": " + gpu.name + "\n";
-                    results_ += "    Vendor: " + std::to_string(static_cast<int>(gpu.vendor)) + "\n";
-                    results_ += "    Architecture: " + std::to_string(static_cast<int>(gpu.architecture)) + "\n";
-                    
-                    results_ += "    API Support: ";
-                    for (size_t j = 0; j < gpu.api_support.size(); ++j) {
-                        if (j > 0) {
-                            results_ += ", ";
-                        }
-                        results_ += std::to_string(static_cast<int>(gpu.api_support[j]));
-                    }
-                    results_ += "\n";
-                    
-                    results_ += "    Memory: " + std::to_string(gpu.memory_info.total_memory_bytes / (1024 * 1024 * 1024)) + " GB\n";
-                    
-                    if (gpu.is_integrated) {
-                        results_ += "    Type: Integrated\n";
-                    } else {
-                        results_ += "    Type: Discrete\n";
-                    }
-                }
-            }
-        }
-        
-        return cpu_success && memory_success && storage_success && gpu_success;
-    }
-    
-    std::string getResults() const override {
-        return results_;
-    }
-    
-private:
-    std::string results_;
-};
-
-// Resource allocation test
-class ResourceAllocationTest : public TestCase {
-public:
-    ResourceAllocationTest() {}
-    
-    std::string getName() const override {
-        return "Resource Allocation Test";
-    }
-    
-    std::string getDescription() const override {
-        return "Tests the allocation of resources for different modes";
-    }
-    
-    bool run() override {
-        std::cout << "Running " << getName() << "..." << std::endl;
-        
-        // Create resource manager
-        mfp::resource::ResourceManager resource_manager;
-        
+// Test fixture for hardware detection tests
+class HardwareDetectionTest : public ::testing::Test {
+protected:
+    void SetUp() override {
         // Initialize resource manager
-        bool init_success = resource_manager.initialize();
-        results_ += "Resource Manager Initialization: " + std::string(init_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        if (!init_success) {
-            return false;
-        }
-        
-        // Test AUTO allocation mode
-        resource_manager.setAllocationMode(mfp::resource::AllocationMode::AUTO);
-        mfp::resource::AllocationResult auto_result = resource_manager.allocateResources();
-        
-        results_ += "\nAUTO Allocation Mode:\n";
-        results_ += "  Success: " + std::string(auto_result.success ? "YES" : "NO") + "\n";
-        if (auto_result.success) {
-            results_ += "  Device Type: " + auto_result.device_type + "\n";
-        } else {
-            results_ += "  Error: " + auto_result.error_message + "\n";
-        }
-        
-        // Test CPU_ONLY allocation mode
-        resource_manager.setAllocationMode(mfp::resource::AllocationMode::CPU_ONLY);
-        mfp::resource::AllocationResult cpu_result = resource_manager.allocateResources();
-        
-        results_ += "\nCPU_ONLY Allocation Mode:\n";
-        results_ += "  Success: " + std::string(cpu_result.success ? "YES" : "NO") + "\n";
-        if (cpu_result.success) {
-            results_ += "  Device Type: " + cpu_result.device_type + "\n";
-        } else {
-            results_ += "  Error: " + cpu_result.error_message + "\n";
-        }
-        
-        // Test GPU_ONLY allocation mode
-        resource_manager.setAllocationMode(mfp::resource::AllocationMode::GPU_ONLY);
-        mfp::resource::AllocationResult gpu_result = resource_manager.allocateResources();
-        
-        results_ += "\nGPU_ONLY Allocation Mode:\n";
-        results_ += "  Success: " + std::string(gpu_result.success ? "YES" : "NO") + "\n";
-        if (gpu_result.success) {
-            results_ += "  Device Type: " + gpu_result.device_type + "\n";
-        } else {
-            results_ += "  Error: " + gpu_result.error_message + "\n";
-        }
-        
-        // Test HYBRID allocation mode
-        resource_manager.setAllocationMode(mfp::resource::AllocationMode::HYBRID);
-        mfp::resource::AllocationResult hybrid_result = resource_manager.allocateResources();
-        
-        results_ += "\nHYBRID Allocation Mode:\n";
-        results_ += "  Success: " + std::string(hybrid_result.success ? "YES" : "NO") + "\n";
-        if (hybrid_result.success) {
-            results_ += "  Device Type: " + hybrid_result.device_type + "\n";
-        } else {
-            results_ += "  Error: " + hybrid_result.error_message + "\n";
-        }
-        
-        // Run benchmark
-        mfp::resource::BenchmarkResult benchmark = resource_manager.runBenchmark();
-        
-        results_ += "\nBenchmark Results:\n";
-        results_ += "  CPU Score: " + std::to_string(benchmark.cpu_score) + "\n";
-        results_ += "  CUDA Score: " + std::to_string(benchmark.cuda_score) + "\n";
-        results_ += "  Metal Score: " + std::to_string(benchmark.metal_score) + "\n";
-        results_ += "  Best Device: " + benchmark.best_device + "\n";
-        
-        // Get system information
-        results_ += "\nSystem Information:\n";
-        results_ += resource_manager.getSystemInfo();
-        
-        return true;
+        ResourceManager& resource_manager = getResourceManager();
+        resource_manager.initialize();
     }
-    
-    std::string getResults() const override {
-        return results_;
-    }
-    
-private:
-    std::string results_;
 };
 
-// Auto configuration test
-class AutoConfigurationTest : public TestCase {
-public:
-    AutoConfigurationTest() {}
+// Test CPU detection
+TEST_F(HardwareDetectionTest, CPUDetection) {
+    ResourceManager& resource_manager = getResourceManager();
+    const CPUInfo& cpu_info = resource_manager.getCPUInfo();
     
-    std::string getName() const override {
-        return "Auto Configuration Test";
-    }
+    // Basic validation
+    EXPECT_GT(cpu_info.physical_cores, 0);
+    EXPECT_GT(cpu_info.logical_cores, 0);
+    EXPECT_GE(cpu_info.logical_cores, cpu_info.physical_cores);
+    EXPECT_FALSE(cpu_info.model_name.empty());
+    EXPECT_FALSE(cpu_info.architecture.empty());
     
-    std::string getDescription() const override {
-        return "Tests the automatic configuration based on hardware capabilities";
-    }
+    // Print CPU info for debugging
+    std::cout << "CPU Info:" << std::endl;
+    std::cout << "  Model: " << cpu_info.model_name << std::endl;
+    std::cout << "  Architecture: " << cpu_info.architecture << std::endl;
+    std::cout << "  Physical cores: " << cpu_info.physical_cores << std::endl;
+    std::cout << "  Logical cores: " << cpu_info.logical_cores << std::endl;
+    std::cout << "  Hyperthreading: " << (cpu_info.has_hyperthreading ? "Yes" : "No") << std::endl;
+    std::cout << "  Features: ";
+    if (cpu_info.has_avx) std::cout << "AVX ";
+    if (cpu_info.has_avx2) std::cout << "AVX2 ";
+    if (cpu_info.has_avx512) std::cout << "AVX512 ";
+    if (cpu_info.has_sse4) std::cout << "SSE4 ";
+    std::cout << std::endl;
+}
+
+// Test memory detection
+TEST_F(HardwareDetectionTest, MemoryDetection) {
+    ResourceManager& resource_manager = getResourceManager();
+    const MemoryInfo& memory_info = resource_manager.getMemoryInfo();
     
-    bool run() override {
-        std::cout << "Running " << getName() << "..." << std::endl;
-        
-        // Create resource manager
-        mfp::resource::ResourceManager resource_manager;
-        
-        // Initialize resource manager
-        bool rm_init_success = resource_manager.initialize();
-        results_ += "Resource Manager Initialization: " + std::string(rm_init_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        if (!rm_init_success) {
-            return false;
+    // Basic validation
+    EXPECT_GT(memory_info.total_physical_memory, 0);
+    EXPECT_GT(memory_info.available_physical_memory, 0);
+    EXPECT_LE(memory_info.available_physical_memory, memory_info.total_physical_memory);
+    
+    // Print memory info for debugging
+    std::cout << "Memory Info:" << std::endl;
+    std::cout << "  Total physical memory: " << (memory_info.total_physical_memory / (1024 * 1024 * 1024)) << " GB" << std::endl;
+    std::cout << "  Available physical memory: " << (memory_info.available_physical_memory / (1024 * 1024 * 1024)) << " GB" << std::endl;
+    std::cout << "  Total virtual memory: " << (memory_info.total_virtual_memory / (1024 * 1024 * 1024)) << " GB" << std::endl;
+    std::cout << "  Available virtual memory: " << (memory_info.available_virtual_memory / (1024 * 1024 * 1024)) << " GB" << std::endl;
+}
+
+// Test storage detection
+TEST_F(HardwareDetectionTest, StorageDetection) {
+    ResourceManager& resource_manager = getResourceManager();
+    const StorageInfo& storage_info = resource_manager.getStorageInfo();
+    
+    // Basic validation
+    EXPECT_GT(storage_info.primary_storage_capacity, 0);
+    EXPECT_GT(storage_info.primary_storage_available, 0);
+    EXPECT_LE(storage_info.primary_storage_available, storage_info.primary_storage_capacity);
+    EXPECT_FALSE(storage_info.primary_storage_type.empty());
+    
+    // Print storage info for debugging
+    std::cout << "Storage Info:" << std::endl;
+    std::cout << "  Primary storage type: " << storage_info.primary_storage_type << std::endl;
+    std::cout << "  Primary storage capacity: " << (storage_info.primary_storage_capacity / (1024 * 1024 * 1024)) << " GB" << std::endl;
+    std::cout << "  Primary storage available: " << (storage_info.primary_storage_available / (1024 * 1024 * 1024)) << " GB" << std::endl;
+}
+
+// Test GPU detection
+TEST_F(HardwareDetectionTest, GPUDetection) {
+    ResourceManager& resource_manager = getResourceManager();
+    const std::vector<GPUInfo>& gpus = resource_manager.getGPUs();
+    
+    // Print GPU info for debugging
+    std::cout << "GPU Info:" << std::endl;
+    if (gpus.empty()) {
+        std::cout << "  No GPUs detected" << std::endl;
+    } else {
+        for (size_t i = 0; i < gpus.size(); i++) {
+            std::cout << "  GPU " << i << ":" << std::endl;
+            std::cout << "    Name: " << gpus[i].getName() << std::endl;
+            std::cout << "    Vendor: ";
+            switch (gpus[i].getVendor()) {
+                case GPUVendor::NVIDIA: std::cout << "NVIDIA"; break;
+                case GPUVendor::AMD: std::cout << "AMD"; break;
+                case GPUVendor::INTEL: std::cout << "Intel"; break;
+                case GPUVendor::APPLE: std::cout << "Apple"; break;
+                default: std::cout << "Unknown"; break;
+            }
+            std::cout << std::endl;
+            
+            std::cout << "    APIs: ";
+            const GPUAPIs& apis = gpus[i].getAPIs();
+            if (apis.supports_cuda) std::cout << "CUDA ";
+            if (apis.supports_opencl) std::cout << "OpenCL ";
+            if (apis.supports_metal) std::cout << "Metal ";
+            if (apis.supports_directx) std::cout << "DirectX ";
+            if (apis.supports_vulkan) std::cout << "Vulkan ";
+            std::cout << std::endl;
+            
+            std::cout << "    Memory: " << (gpus[i].getMemory().total_memory_bytes / (1024 * 1024 * 1024)) << " GB" << std::endl;
         }
-        
-        // Create configuration manager
-        mfp::config::ConfigurationManager config_manager;
+    }
+    
+    // Check if CUDA is available
+    std::cout << "  CUDA available: " << (resource_manager.isCUDAAvailable() ? "Yes" : "No") << std::endl;
+    
+    // Check if Metal is available
+    std::cout << "  Metal available: " << (resource_manager.isMetalAvailable() ? "Yes" : "No") << std::endl;
+}
+
+// Test fixture for resource allocation tests
+class ResourceAllocationTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Initialize resource manager
+        ResourceManager& resource_manager = getResourceManager();
+        resource_manager.initialize();
         
         // Initialize configuration manager
-        bool cm_init_success = config_manager.initialize(&resource_manager);
-        results_ += "Configuration Manager Initialization: " + std::string(cm_init_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        if (!cm_init_success) {
-            return false;
-        }
-        
-        // Auto-configure based on hardware
-        bool auto_config_success = config_manager.autoConfigureForHardware();
-        results_ += "Auto Configuration: " + std::string(auto_config_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        if (!auto_config_success) {
-            return false;
-        }
-        
-        // Get configuration summary
-        results_ += "\nConfiguration Summary:\n";
-        results_ += config_manager.getConfigurationSummary();
-        
-        // Test different hardware profiles
-        results_ += "\nTesting Different Hardware Profiles:\n";
-        
-        // Low-end hardware profile
-        config_manager.setCurrentProfile("low_end");
-        results_ += "\nLow-End Hardware Profile:\n";
-        results_ += config_manager.getConfigurationSummary();
-        
-        // Mid-range hardware profile
-        config_manager.setCurrentProfile("mid_range");
-        results_ += "\nMid-Range Hardware Profile:\n";
-        results_ += config_manager.getConfigurationSummary();
-        
-        // High-end hardware profile
-        config_manager.setCurrentProfile("high_end");
-        results_ += "\nHigh-End Hardware Profile:\n";
-        results_ += config_manager.getConfigurationSummary();
-        
-        // Server hardware profile
-        config_manager.setCurrentProfile("server");
-        results_ += "\nServer Hardware Profile:\n";
-        results_ += config_manager.getConfigurationSummary();
-        
-        // Workstation hardware profile
-        config_manager.setCurrentProfile("workstation");
-        results_ += "\nWorkstation Hardware Profile:\n";
-        results_ += config_manager.getConfigurationSummary();
-        
-        // Create custom profile
-        auto custom_profile = config_manager.createProfile("custom_test", mfp::config::HardwareClass::CUSTOM);
-        custom_profile->setParameter("allocation_mode", "cpu_only", false);
-        custom_profile->setParameter("mfp_method", "method2", false);
-        custom_profile->setParameter("thread_count", "4", false);
-        custom_profile->setParameter("memory_limit_mb", "2048", false);
-        
-        config_manager.setCurrentProfile("custom_test");
-        results_ += "\nCustom Hardware Profile:\n";
-        results_ += config_manager.getConfigurationSummary();
-        
-        // Save configuration to file
-        bool save_success = config_manager.saveConfiguration("test_config.cfg");
-        results_ += "\nSave Configuration: " + std::string(save_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        // Load configuration from file
-        bool load_success = config_manager.loadConfiguration("test_config.cfg");
-        results_ += "Load Configuration: " + std::string(load_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        return true;
+        ConfigurationManager& config_manager = getConfigurationManager();
+        config_manager.initialize(resource_manager);
     }
-    
-    std::string getResults() const override {
-        return results_;
-    }
-    
-private:
-    std::string results_;
 };
 
-// MFP performance test
-class MFPPerformanceTest : public TestCase {
-public:
-    MFPPerformanceTest() {}
+// Test resource manager
+TEST_F(ResourceAllocationTest, ResourceManager) {
+    ResourceManager& resource_manager = getResourceManager();
     
-    std::string getName() const override {
-        return "MFP Performance Test";
+    // Test execution strategy
+    resource_manager.setExecutionStrategy(ExecutionStrategy::CPU_ONLY);
+    EXPECT_EQ(resource_manager.getExecutionStrategy(), ExecutionStrategy::CPU_ONLY);
+    
+    resource_manager.setExecutionStrategy(ExecutionStrategy::AUTO);
+    EXPECT_NE(resource_manager.getExecutionStrategy(), ExecutionStrategy::HYBRID); // HYBRID is not auto-selected
+    
+    // Test allocation mode
+    resource_manager.setAllocationMode(AllocationMode::PERFORMANCE);
+    EXPECT_EQ(resource_manager.getAllocationMode(), AllocationMode::PERFORMANCE);
+    
+    resource_manager.setAllocationMode(AllocationMode::MEMORY);
+    EXPECT_EQ(resource_manager.getAllocationMode(), AllocationMode::MEMORY);
+    
+    // Test optimal thread count
+    int thread_count = resource_manager.getOptimalThreadCount();
+    EXPECT_GT(thread_count, 0);
+    EXPECT_LE(thread_count, resource_manager.getCPUInfo().logical_cores);
+    
+    // Test optimal block size
+    size_t block_size = resource_manager.getOptimalBlockSize();
+    EXPECT_GT(block_size, 0);
+    
+    // Test optimal memory limit
+    size_t memory_limit = resource_manager.getOptimalMemoryLimit();
+    EXPECT_GT(memory_limit, 0);
+    EXPECT_LT(memory_limit, resource_manager.getMemoryInfo().total_physical_memory);
+    
+    // Print resource manager info
+    std::cout << "Resource Manager Info:" << std::endl;
+    std::cout << "  Optimal thread count: " << thread_count << std::endl;
+    std::cout << "  Optimal block size: " << block_size << " bytes" << std::endl;
+    std::cout << "  Optimal memory limit: " << (memory_limit / (1024 * 1024)) << " MB" << std::endl;
+    
+    // Print system summary
+    std::cout << resource_manager.getSystemSummary() << std::endl;
+}
+
+// Test configuration manager
+TEST_F(ResourceAllocationTest, ConfigurationManager) {
+    ConfigurationManager& config_manager = getConfigurationManager();
+    
+    // Test current profile
+    const ConfigProfile& current_profile = config_manager.getCurrentProfile();
+    EXPECT_FALSE(current_profile.getName().empty());
+    
+    // Test available profiles
+    const std::map<std::string, ConfigProfile>& profiles = config_manager.getProfiles();
+    EXPECT_FALSE(profiles.empty());
+    
+    // Print configuration summary
+    std::cout << config_manager.getConfigurationSummary() << std::endl;
+}
+
+// Test MFP creation with different strategies
+TEST_F(ResourceAllocationTest, MFPCreation) {
+    ResourceManager& resource_manager = getResourceManager();
+    
+    // Test CPU-only strategy
+    resource_manager.setExecutionStrategy(ExecutionStrategy::CPU_ONLY);
+    auto mfp_cpu = resource_manager.createMFP(1);
+    EXPECT_NE(mfp_cpu, nullptr);
+    
+    // Test CUDA strategy if available
+    if (resource_manager.isCUDAAvailable()) {
+        resource_manager.setExecutionStrategy(ExecutionStrategy::CUDA_GPU);
+        auto mfp_cuda = resource_manager.createMFP(1);
+        EXPECT_NE(mfp_cuda, nullptr);
     }
     
-    std::string getDescription() const override {
-        return "Tests the performance of MFP methods on different hardware configurations";
+    // Test Metal strategy if available
+    if (resource_manager.isMetalAvailable()) {
+        resource_manager.setExecutionStrategy(ExecutionStrategy::METAL_GPU);
+        auto mfp_metal = resource_manager.createMFP(1);
+        EXPECT_NE(mfp_metal, nullptr);
     }
     
-    bool run() override {
-        std::cout << "Running " << getName() << "..." << std::endl;
-        
-        // Create resource manager
-        mfp::resource::ResourceManager resource_manager;
-        
+    // Test AUTO strategy
+    resource_manager.setExecutionStrategy(ExecutionStrategy::AUTO);
+    auto mfp_auto = resource_manager.createMFP(1);
+    EXPECT_NE(mfp_auto, nullptr);
+}
+
+// Test fixture for MFP operations with hardware detection
+class MFPOperationsTest : public ::testing::Test {
+protected:
+    void SetUp() override {
         // Initialize resource manager
-        bool rm_init_success = resource_manager.initialize();
-        results_ += "Resource Manager Initialization: " + std::string(rm_init_success ? "SUCCESS" : "FAILURE") + "\n";
-        
-        if (!rm_init_success) {
-            return false;
-        }
-        
-        // Create configuration manager
-        mfp::config::ConfigurationManager config_manager;
+        ResourceManager& resource_manager = getResourceManager();
+        resource_manager.initialize();
         
         // Initialize configuration manager
-        bool cm_init_success = config_manager.initialize(&resource_manager);
-        results_ += "Configuration Manager Initialization: " + std::string(cm_init_success ? "SUCCESS" : "FAILURE") + "\n";
+        ConfigurationManager& config_manager = getConfigurationManager();
+        config_manager.initialize(resource_manager);
         
-        if (!cm_init_success) {
-            return false;
-        }
+        // Create MFP implementation
+        m_mfp = resource_manager.createMFP(1);
+    }
+    
+    std::unique_ptr<MFPBase> m_mfp;
+};
+
+// Test isPrime operation
+TEST_F(MFPOperationsTest, IsPrime) {
+    ASSERT_NE(m_mfp, nullptr);
+    
+    // Test known primes
+    bool is_prime;
+    
+    m_mfp->isPrime(2, is_prime);
+    EXPECT_TRUE(is_prime);
+    
+    m_mfp->isPrime(3, is_prime);
+    EXPECT_TRUE(is_prime);
+    
+    m_mfp->isPrime(5, is_prime);
+    EXPECT_TRUE(is_prime);
+    
+    m_mfp->isPrime(7, is_prime);
+    EXPECT_TRUE(is_prime);
+    
+    m_mfp->isPrime(11, is_prime);
+    EXPECT_TRUE(is_prime);
+    
+    m_mfp->isPrime(13, is_prime);
+    EXPECT_TRUE(is_prime);
+    
+    // Test known non-primes
+    m_mfp->isPrime(1, is_prime);
+    EXPECT_FALSE(is_prime);
+    
+    m_mfp->isPrime(4, is_prime);
+    EXPECT_FALSE(is_prime);
+    
+    m_mfp->isPrime(6, is_prime);
+    EXPECT_FALSE(is_prime);
+    
+    m_mfp->isPrime(8, is_prime);
+    EXPECT_FALSE(is_prime);
+    
+    m_mfp->isPrime(9, is_prime);
+    EXPECT_FALSE(is_prime);
+    
+    m_mfp->isPrime(10, is_prime);
+    EXPECT_FALSE(is_prime);
+    
+    // Test larger prime
+    m_mfp->isPrime(104729, is_prime); // 10,000th prime
+    EXPECT_TRUE(is_prime);
+}
+
+// Test factorize operation
+TEST_F(MFPOperationsTest, Factorize) {
+    ASSERT_NE(m_mfp, nullptr);
+    
+    // Test factorization of composite numbers
+    std::vector<mpz_t> factors;
+    
+    // Factorize 4 = 2 * 2
+    m_mfp->factorize(4, factors);
+    ASSERT_EQ(factors.size(), 2);
+    EXPECT_EQ(mpz_get_ui(factors[0]), 2);
+    EXPECT_EQ(mpz_get_ui(factors[1]), 2);
+    
+    // Clear factors
+    for (auto& factor : factors) {
+        mpz_clear(factor);
+    }
+    factors.clear();
+    
+    // Factorize 6 = 2 * 3
+    m_mfp->factorize(6, factors);
+    ASSERT_EQ(factors.size(), 2);
+    EXPECT_EQ(mpz_get_ui(factors[0]), 2);
+    EXPECT_EQ(mpz_get_ui(factors[1]), 3);
+    
+    // Clear factors
+    for (auto& factor : factors) {
+        mpz_clear(factor);
+    }
+    factors.clear();
+    
+    // Factorize 12 = 2 * 2 * 3
+    m_mfp->factorize(12, factors);
+    ASSERT_EQ(factors.size(), 3);
+    EXPECT_EQ(mpz_get_ui(factors[0]), 2);
+    EXPECT_EQ(mpz_get_ui(factors[1]), 2);
+    EXPECT_EQ(mpz_get_ui(factors[2]), 3);
+    
+    // Clear factors
+    for (auto& factor : factors) {
+        mpz_clear(factor);
+    }
+    factors.clear();
+}
+
+// Test nextPrime operation
+TEST_F(MFPOperationsTest, NextPrime) {
+    ASSERT_NE(m_mfp, nullptr);
+    
+    // Test next prime
+    mpz_t next_prime;
+    mpz_init(next_prime);
+    
+    // Next prime after 1 is 2
+    m_mfp->nextPrime(1, next_prime);
+    EXPECT_EQ(mpz_get_ui(next_prime), 2);
+    
+    // Next prime after 2 is 3
+    m_mfp->nextPrime(2, next_prime);
+    EXPECT_EQ(mpz_get_ui(next_prime), 3);
+    
+    // Next prime after 3 is 5
+    m_mfp->nextPrime(3, next_prime);
+    EXPECT_EQ(mpz_get_ui(next_prime), 5);
+    
+    // Next prime after 5 is 7
+    m_mfp->nextPrime(5, next_prime);
+    EXPECT_EQ(mpz_get_ui(next_prime), 7);
+    
+    // Next prime after 7 is 11
+    m_mfp->nextPrime(7, next_prime);
+    EXPECT_EQ(mpz_get_ui(next_prime), 11);
+    
+    // Next prime after 11 is 13
+    m_mfp->nextPrime(11, next_prime);
+    EXPECT_EQ(mpz_get_ui(next_prime), 13);
+    
+    // Clean up
+    mpz_clear(next_prime);
+}
+
+// Test performance metrics
+TEST_F(MFPOperationsTest, PerformanceMetrics) {
+    ASSERT_NE(m_mfp, nullptr);
+    
+    // Run operations with performance metrics enabled
+    m_mfp->enablePerformanceMetrics(true);
+    
+    // Run isPrime operation
+    bool is_prime;
+    m_mfp->isPrime(104729, is_prime); // 10,000th prime
+    
+    // Get performance metrics
+    const PerformanceMetrics& metrics = m_mfp->getPerformanceMetrics();
+    
+    // Basic validation
+    EXPECT_GT(metrics.total_execution_time_ms, 0.0);
+    EXPECT_GT(metrics.operations_count, 0);
+    
+    // Print performance metrics
+    std::cout << "Performance Metrics:" << std::endl;
+    std::cout << "  Total execution time: " << metrics.total_execution_time_ms << " ms" << std::endl;
+    std::cout << "  Operations count: " << metrics.operations_count << std::endl;
+    std::cout << "  Average time per operation: " << (metrics.total_execution_time_ms / metrics.operations_count) << " ms" << std::endl;
+}
+
+// Test all MFP methods with hardware detection
+TEST_F(MFPOperationsTest, AllMethods) {
+    ResourceManager& resource_manager = getResourceManager();
+    
+    // Test all three MFP methods
+    for (int method = 1; method <= 3; method++) {
+        std::cout << "Testing MFP Method " << method << std::endl;
         
-        // Auto-configure based on hardware
-        bool auto_config_success = config_manager.autoConfigureForHardware();
-        results_ += "Auto Configuration: " + std::string(auto_config_success ? "SUCCESS" : "FAILURE") + "\n\n";
+        auto mfp = resource_manager.createMFP(method);
+        ASSERT_NE(mfp, nullptr);
         
-        // Test different MFP methods with different number sizes
-        results_ += "Testing MFP Methods with Different Number Sizes:\n";
+        // Enable performance metrics
+        mfp->enablePerformanceMetrics(true);
         
-        // Generate test numbers
-        std::vector<std::string> test_numbers = {
-            "12345",                                    // Small number (5 digits)
-            "1234567890123456789",                      // Medium number (19 digits)
-            "12345678901234567890123456789012345678901234567890"  // Large number (50 digits)
-        };
-        
-        // Test each MFP method
-        std::vector<mfp::resource::MFPMethod> methods = {
-            mfp::resource::MFPMethod::METHOD_1,
-            mfp::resource::MFPMethod::METHOD_2,
-            mfp::resource::MFPMethod::METHOD_3,
-            mfp::resource::MFPMethod::AUTO
-        };
-        
-        std::vector<std::string> method_names = {
-            "METHOD_1 (Expanded q Factorization)",
-            "METHOD_2 (Ultrafast with Structural Filter)",
-            "METHOD_3 (Parallelized with Dynamic Blocks)",
-            "AUTO (Automatic Selection)"
-        };
-        
-        // Test each allocation mode
-        std::vector<mfp::resource::AllocationMode> modes = {
-            mfp::resource::AllocationMode::CPU_ONLY,
-            mfp::resource::AllocationMode::GPU_ONLY,
-            mfp::resource::AllocationMode::HYBRID,
-            mfp::resource::AllocationMode::AUTO
-        };
-        
-        std::vector<std::string> mode_names = {
-            "CPU_ONLY",
-            "GPU_ONLY",
-            "HYBRID",
-            "AUTO"
-        };
-        
-        // Enable performance logging
-        resource_manager.setPerformanceLogging(true);
-        
-        // Run tests
-        for (size_t mode_idx = 0; mode_idx < modes.size(); ++mode_idx) {
-            auto mode = modes[mode_idx];
-            auto mode_name = mode_names[mode_idx];
-            
-            results_ += "\nAllocation Mode: " + mode_name + "\n";
-            resource_manager.setAllocationMode(mode);
-            
-            for (size_t method_idx = 0; method_idx < methods.size(); ++method_idx) {
-                auto method = methods[method_idx];
-                auto method_name = method_names[method_idx];
-                
-                results_ += "  MFP Method: " + method_name + "\n";
-                resource_manager.setMFPMethod(method);
-                
-                for (size_t num_idx = 0; num_idx < test_numbers.size(); ++num_idx) {
-                    auto number = test_numbers[num_idx];
-                    
-                    results_ += "    Number Size: " + std::to_string(number.size()) + " digits\n";
-                    
-                    // Allocate resources
-                    mfp::resource::AllocationResult alloc_result = resource_manager.allocateResources();
-                    
-                    if (!alloc_result.success) {
-                        results_ += "      Resource Allocation Failed: " + alloc_result.error_message + "\n";
-                        continue;
-                    }
-                    
-                    // Run MFP
-                    auto start_time = std::chrono::high_resolution_clock::now();
-                    
-                    std::vector<std::string> factors;
-                    bool mfp_success = resource_manager.runMFP(number, factors);
-                    
-                    auto end_time = std::chrono::high_resolution_clock::now();
-                    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-                    
-                    results_ += "      Execution Time: " + std::to_string(duration) + " ms\n";
-                    results_ += "      Success: " + std::string(mfp_success ? "YES" : "NO") + "\n";
-                    
-                    if (mfp_success && !factors.empty()) {
-                        results_ += "      Factors Found: " + std::to_string(factors.size()) + "\n";
-                    }
-                }
-            }
-        }
+        // Test isPrime operation
+        bool is_prime;
+        mfp->isPrime(104729, is_prime); // 10,000th prime
+        EXPECT_TRUE(is_prime);
         
         // Get performance metrics
-        results_ += "\nPerformance Metrics:\n";
-        results_ += resource_manager.getPerformanceMetrics();
+        const PerformanceMetrics& metrics = mfp->getPerformanceMetrics();
         
-        return true;
+        // Print performance metrics
+        std::cout << "  Method " << method << " execution time: " << metrics.total_execution_time_ms << " ms" << std::endl;
     }
-    
-    std::string getResults() const override {
-        return results_;
-    }
-    
-private:
-    std::string results_;
-};
+}
 
-// Main test runner
-int main() {
-    std::cout << "MFP System Test Suite" << std::endl;
-    std::cout << "====================" << std::endl;
-    
-    // Create test cases
-    std::vector<std::unique_ptr<TestCase>> tests;
-    tests.push_back(std::make_unique<HardwareDetectionTest>());
-    tests.push_back(std::make_unique<ResourceAllocationTest>());
-    tests.push_back(std::make_unique<AutoConfigurationTest>());
-    tests.push_back(std::make_unique<MFPPerformanceTest>());
-    
-    // Run tests
-    std::vector<bool> results;
-    std::vector<std::string> result_details;
-    
-    for (const auto& test : tests) {
-        std::cout << "\n" << test->getName() << std::endl;
-        std::cout << test->getDescription() << std::endl;
-        std::cout << std::string(test->getDescription().size(), '-') << std::endl;
-        
-        bool result = test->run();
-        results.push_back(result);
-        result_details.push_back(test->getResults());
-        
-        std::cout << "Result: " << (result ? "PASS" : "FAIL") << std::endl;
-    }
-    
-    // Print summary
-    std::cout << "\nTest Summary" << std::endl;
-    std::cout << "===========" << std::endl;
-    
-    int pass_count = 0;
-    for (size_t i = 0; i < tests.size(); ++i) {
-        std::cout << tests[i]->getName() << ": " << (results[i] ? "PASS" : "FAIL") << std::endl;
-        if (results[i]) {
-            pass_count++;
-        }
-    }
-    
-    std::cout << "\nPassed " << pass_count << " of " << tests.size() << " tests" << std::endl;
-    
-    // Save detailed results to file
-    std::ofstream result_file("test_results.txt");
-    if (result_file.is_open()) {
-        result_file << "MFP System Test Results" << std::endl;
-        result_file << "======================" << std::endl;
-        
-        for (size_t i = 0; i < tests.size(); ++i) {
-            result_file << "\n" << tests[i]->getName() << std::endl;
-            result_file << tests[i]->getDescription() << std::endl;
-            result_file << std::string(tests[i]->getDescription().size(), '-') << std::endl;
-            result_file << "Result: " << (results[i] ? "PASS" : "FAIL") << std::endl;
-            result_file << "\nDetails:\n" << result_details[i] << std::endl;
-        }
-        
-        result_file.close();
-        std::cout << "\nDetailed results saved to test_results.txt" << std::endl;
-    }
-    
-    return pass_count == tests.size() ? 0 : 1;
+} // namespace test
+} // namespace mfp
+
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

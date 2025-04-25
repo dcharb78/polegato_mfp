@@ -1,193 +1,138 @@
 #pragma once
 
 #include <string>
-#include <vector>
-#include <memory>
 #include <map>
+#include <memory>
 #include "resource_manager.h"
 
 namespace mfp {
-namespace config {
 
-// Forward declarations
-class ConfigurationManager;
-class ConfigProfile;
+// Configuration profile types
+enum class ProfileType {
+    LOW_END,     // Low-end hardware (dual-core CPUs, limited RAM)
+    MID_RANGE,   // Mid-range hardware (quad-core CPUs, moderate RAM)
+    HIGH_END,    // High-end hardware (8+ core CPUs, gaming GPUs)
+    SERVER,      // Server hardware (16+ core CPUs, large RAM)
+    WORKSTATION, // Workstation hardware (high-end CPUs, professional GPUs)
+    CUSTOM       // Custom configuration
+};
 
 // Configuration parameter types
 enum class ParamType {
-    INTEGER,
-    FLOAT,
-    BOOLEAN,
-    STRING,
-    ENUM
+    INT,         // Integer parameter
+    DOUBLE,      // Double parameter
+    BOOL,        // Boolean parameter
+    STRING,      // String parameter
+    ENUM         // Enumeration parameter
 };
 
 // Configuration parameter
-struct ConfigParameter {
+struct ConfigParam {
     std::string name;
     ParamType type;
-    std::string description;
-    std::string default_value;
-    std::vector<std::string> allowed_values; // For ENUM type
-    std::string current_value;
-    bool auto_configured;
-};
-
-// Hardware class (for configuration rules)
-enum class HardwareClass {
-    LOW_END,       // Basic hardware (e.g., dual-core CPU, no GPU)
-    MID_RANGE,     // Moderate hardware (e.g., quad-core CPU, basic GPU)
-    HIGH_END,      // High-performance hardware (e.g., 8+ core CPU, gaming GPU)
-    SERVER,        // Server-grade hardware (e.g., 16+ core CPU, lots of RAM)
-    WORKSTATION,   // Workstation hardware (e.g., high-end CPU, professional GPU)
-    CUSTOM         // Custom hardware configuration
+    
+    // Value storage (only one is used based on type)
+    int int_value;
+    double double_value;
+    bool bool_value;
+    std::string string_value;
+    
+    // Constructor for int parameter
+    ConfigParam(const std::string& n, int value) 
+        : name(n), type(ParamType::INT), int_value(value) {}
+    
+    // Constructor for double parameter
+    ConfigParam(const std::string& n, double value) 
+        : name(n), type(ParamType::DOUBLE), double_value(value) {}
+    
+    // Constructor for bool parameter
+    ConfigParam(const std::string& n, bool value) 
+        : name(n), type(ParamType::BOOL), bool_value(value) {}
+    
+    // Constructor for string parameter
+    ConfigParam(const std::string& n, const std::string& value) 
+        : name(n), type(ParamType::STRING), string_value(value) {}
+    
+    // Constructor for enum parameter (stored as string)
+    ConfigParam(const std::string& n, const std::string& value, ParamType t) 
+        : name(n), type(t), string_value(value) {}
 };
 
 // Configuration profile
 class ConfigProfile {
 public:
-    // Constructor and destructor
-    ConfigProfile(const std::string& name, HardwareClass hardware_class);
-    ~ConfigProfile() = default;
+    ConfigProfile(ProfileType type, const std::string& name);
+    
+    // Get profile type
+    ProfileType getType() const;
     
     // Get profile name
-    std::string getName() const;
-    
-    // Get hardware class
-    HardwareClass getHardwareClass() const;
+    const std::string& getName() const;
     
     // Set parameter
-    void setParameter(const std::string& name, const std::string& value, bool auto_configured = false);
+    void setParam(const std::string& name, const ConfigParam& param);
     
     // Get parameter
-    std::string getParameter(const std::string& name) const;
+    const ConfigParam* getParam(const std::string& name) const;
     
-    // Check if parameter exists
-    bool hasParameter(const std::string& name) const;
+    // Apply profile to resource manager
+    void apply(ResourceManager& resource_manager) const;
     
-    // Get all parameters
-    const std::map<std::string, ConfigParameter>& getParameters() const;
+    // Create profile from resource manager
+    static ConfigProfile createFromResourceManager(const ResourceManager& resource_manager, const std::string& name);
     
-    // Load profile from file
-    bool loadFromFile(const std::string& filename);
-    
-    // Save profile to file
-    bool saveToFile(const std::string& filename) const;
-    
-    // Create string representation
-    std::string toString() const;
+    // Create default profile for hardware
+    static ConfigProfile createDefaultProfile(const ResourceManager& resource_manager);
     
 private:
-    std::string name_;
-    HardwareClass hardware_class_;
-    std::map<std::string, ConfigParameter> parameters_;
+    ProfileType m_type;
+    std::string m_name;
+    std::map<std::string, ConfigParam> m_params;
 };
 
-// Configuration manager
+// Configuration manager class
 class ConfigurationManager {
 public:
-    // Constructor and destructor
     ConfigurationManager();
     ~ConfigurationManager();
     
     // Initialize configuration manager
-    bool initialize(resource::ResourceManager* resource_manager);
-    
-    // Auto-configure based on detected hardware
-    bool autoConfigureForHardware();
-    
-    // Load configuration from file
-    bool loadConfiguration(const std::string& filename);
-    
-    // Save configuration to file
-    bool saveConfiguration(const std::string& filename) const;
+    bool initialize(ResourceManager& resource_manager);
     
     // Get current profile
-    ConfigProfile* getCurrentProfile();
+    const ConfigProfile& getCurrentProfile() const;
     
     // Set current profile
-    void setCurrentProfile(const std::string& profile_name);
+    void setCurrentProfile(const ConfigProfile& profile);
     
-    // Create new profile
-    ConfigProfile* createProfile(const std::string& name, HardwareClass hardware_class);
+    // Get available profiles
+    const std::map<std::string, ConfigProfile>& getProfiles() const;
     
-    // Delete profile
-    bool deleteProfile(const std::string& name);
+    // Add profile
+    void addProfile(const ConfigProfile& profile);
     
-    // Get profile by name
-    ConfigProfile* getProfile(const std::string& name);
+    // Remove profile
+    void removeProfile(const std::string& name);
     
-    // Get all profiles
-    const std::map<std::string, std::unique_ptr<ConfigProfile>>& getProfiles() const;
+    // Save configuration to file
+    bool saveToFile(const std::string& filename) const;
     
-    // Register parameter
-    void registerParameter(const std::string& name, ParamType type, const std::string& description, 
-                          const std::string& default_value, 
-                          const std::vector<std::string>& allowed_values = {});
-    
-    // Get parameter
-    std::string getParameter(const std::string& name) const;
-    
-    // Set parameter
-    void setParameter(const std::string& name, const std::string& value, bool auto_configured = false);
-    
-    // Get parameter as integer
-    int getIntParameter(const std::string& name) const;
-    
-    // Get parameter as float
-    float getFloatParameter(const std::string& name) const;
-    
-    // Get parameter as boolean
-    bool getBoolParameter(const std::string& name) const;
-    
-    // Get parameter description
-    std::string getParameterDescription(const std::string& name) const;
-    
-    // Get parameter type
-    ParamType getParameterType(const std::string& name) const;
-    
-    // Get allowed values for parameter
-    std::vector<std::string> getAllowedValues(const std::string& name) const;
-    
-    // Check if parameter is auto-configured
-    bool isAutoConfigured(const std::string& name) const;
-    
-    // Reset parameter to default value
-    void resetParameter(const std::string& name);
-    
-    // Reset all parameters to default values
-    void resetAllParameters();
+    // Load configuration from file
+    bool loadFromFile(const std::string& filename);
     
     // Get configuration summary
     std::string getConfigurationSummary() const;
     
-    // Apply configuration to resource manager
-    void applyConfiguration();
-    
 private:
-    // Resource manager reference
-    resource::ResourceManager* resource_manager_;
+    ResourceManager* m_resource_manager;
+    ConfigProfile m_current_profile;
+    std::map<std::string, ConfigProfile> m_profiles;
     
-    // Configuration profiles
-    std::map<std::string, std::unique_ptr<ConfigProfile>> profiles_;
-    
-    // Current profile
-    ConfigProfile* current_profile_;
-    
-    // Parameter definitions
-    std::map<std::string, ConfigParameter> parameter_definitions_;
-    
-    // Helper methods
-    HardwareClass classifyHardware();
+    // Create default profiles
     void createDefaultProfiles();
-    void registerDefaultParameters();
-    ConfigProfile* createDefaultProfile(const std::string& name, HardwareClass hardware_class);
-    void configureForLowEndHardware(ConfigProfile* profile);
-    void configureForMidRangeHardware(ConfigProfile* profile);
-    void configureForHighEndHardware(ConfigProfile* profile);
-    void configureForServerHardware(ConfigProfile* profile);
-    void configureForWorkstationHardware(ConfigProfile* profile);
 };
 
-} // namespace config
+// Global configuration manager instance
+ConfigurationManager& getConfigurationManager();
+
 } // namespace mfp
