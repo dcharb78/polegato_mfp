@@ -1,27 +1,18 @@
 cmake_minimum_required(VERSION 3.10)
-project(mfp_implementation VERSION 1.0.0 LANGUAGES CXX)
+project(fixed_mfp)
 
 # Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Find GMP package
 find_library(GMP_LIBRARIES NAMES gmp)
-find_path(GMP_INCLUDE_DIRS NAMES gmp.h)
-
-if(NOT GMP_LIBRARIES OR NOT GMP_INCLUDE_DIRS)
-    message(FATAL_ERROR "GMP library not found. Please install libgmp-dev")
+if(NOT GMP_LIBRARIES)
+    message(FATAL_ERROR "GMP library not found")
 endif()
 
-# Find Threads package
-find_package(Threads REQUIRED)
-
 # Include directories
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${GMP_INCLUDE_DIRS}
-)
+include_directories(include)
 
 # Source files
 set(SOURCES
@@ -29,20 +20,17 @@ set(SOURCES
     src/mfp_method1.cpp
     src/mfp_method2.cpp
     src/mfp_method3.cpp
-    src/mfp_system.cpp
-    src/main.cpp
 )
 
-# Create executable
-add_executable(mfp_app ${SOURCES})
+# Create library
+add_library(mfp STATIC ${SOURCES})
+target_link_libraries(mfp ${GMP_LIBRARIES})
 
-# Link libraries
-target_link_libraries(mfp_app
-    ${GMP_LIBRARIES}
-    Threads::Threads
-)
+# Create test executable
+add_executable(test_mfp test/test_mfp.cpp)
+target_link_libraries(test_mfp mfp ${GMP_LIBRARIES})
 
-# Install target
-install(TARGETS mfp_app
-    RUNTIME DESTINATION bin
-)
+# Add pthread for Method 3
+find_package(Threads REQUIRED)
+target_link_libraries(mfp Threads::Threads)
+target_link_libraries(test_mfp Threads::Threads)

@@ -1,8 +1,6 @@
-#include "mfp_method2.h"
-#include <gmp.h>
+#include "../include/mfp_method2.h"
 #include <iostream>
 #include <cmath>
-#include <vector>
 
 namespace mfp {
 
@@ -11,17 +9,40 @@ MFPMethod2::MFPMethod2() {
 }
 
 MFPMethod2::~MFPMethod2() {
-    // Nothing to clean up
+    // Clean up resources
 }
 
 bool MFPMethod2::isPrime(const std::string& number) {
-    // First apply structural filter for quick rejection
-    if (!structuralFilter(number)) {
+    // For small numbers, use the base class implementation
+    try {
+        unsigned long n = std::stoul(number);
+        if (n < 1000000) {
+            return MFPBase::isPrime(number);
+        }
+    } catch (const std::exception& e) {
+        // Number is too large for unsigned long, continue with MFP approach
+    }
+    
+    // For larger numbers, try to find a divisor using the MFP approach
+    mpz_t n, divisor;
+    mpz_inits(n, divisor, nullptr);
+    
+    // Convert string to mpz_t
+    strToMpz(number, n);
+    
+    // Check if n is divisible by small primes
+    if (checkSmallPrimes(n, divisor)) {
+        mpz_clears(n, divisor, nullptr);
         return false;
     }
     
-    // Then use Miller-Rabin test for more thorough check
-    return MFPBase::isPrime(number);
+    // Try to find a divisor using the Ultrafast with Structural Filter method
+    bool hasDivisor = ultrafastFactorization(n, divisor);
+    
+    mpz_clears(n, divisor, nullptr);
+    
+    // If we found a divisor, the number is not prime
+    return !hasDivisor;
 }
 
 std::vector<std::string> MFPMethod2::factorize(const std::string& number) {
@@ -33,215 +54,125 @@ std::vector<std::string> MFPMethod2::factorize(const std::string& number) {
         return factors;
     }
     
-    // Use the Ultrafast Factorization method
-    if (ultrafastFactorization(number, factors)) {
+    mpz_t n, divisor, quotient;
+    mpz_inits(n, divisor, quotient, nullptr);
+    
+    // Convert string to mpz_t
+    strToMpz(number, n);
+    
+    // Check if n is divisible by small primes
+    if (checkSmallPrimes(n, divisor)) {
+        // Add the small prime to the factors
+        factors.push_back(mpzToStr(divisor));
+        
+        // Calculate the quotient
+        mpz_divexact(quotient, n, divisor);
+        
+        // Recursively factorize the quotient
+        std::vector<std::string> remaining_factors = factorize(mpzToStr(quotient));
+        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
+        
+        mpz_clears(n, divisor, quotient, nullptr);
         return factors;
     }
     
-    // Fallback to trial division for small numbers
-    try {
-        unsigned long n = std::stoul(number);
-        if (n <= 1000000) {
-            // Trial division for small numbers
-            if (n <= 1) {
-                return factors; // Empty for 0 and 1
-            }
-            
-            while (n % 2 == 0) {
-                factors.push_back("2");
-                n /= 2;
-            }
-            
-            for (unsigned long i = 3; i * i <= n; i += 2) {
-                while (n % i == 0) {
-                    factors.push_back(std::to_string(i));
-                    n /= i;
-                }
-            }
-            
-            if (n > 1) {
-                factors.push_back(std::to_string(n));
-            }
-            
-            return factors;
-        }
-    } catch (const std::exception& e) {
-        // Number is too large for unsigned long, continue with GMP
+    // Try to find a divisor using the Ultrafast with Structural Filter method
+    if (ultrafastFactorization(n, divisor)) {
+        // Add the divisor to the factors
+        factors.push_back(mpzToStr(divisor));
+        
+        // Calculate the quotient
+        mpz_divexact(quotient, n, divisor);
+        
+        // Recursively factorize the quotient
+        std::vector<std::string> remaining_factors = factorize(mpzToStr(quotient));
+        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
+        
+        mpz_clears(n, divisor, quotient, nullptr);
+        return factors;
     }
     
-    // If all else fails, just return the number itself
+    // If we get here, we couldn't find any factors, so the number must be prime
     factors.push_back(number);
+    
+    mpz_clears(n, divisor, quotient, nullptr);
     return factors;
 }
 
-std::string MFPMethod2::findNextPrime(const std::string& number) {
-    // Use the base class implementation
-    return MFPBase::findNextPrime(number);
-}
-
-bool MFPMethod2::structuralFilter(const std::string& number) {
-    // Quick check for small numbers
-    try {
-        unsigned long n = std::stoul(number);
-        if (n <= 1) return false;
-        if (n <= 3) return true;
-        if (n % 2 == 0 || n % 3 == 0) return false;
-        
-        // Check if n is divisible by small primes
-        const unsigned long small_primes[] = {5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47};
-        for (unsigned long p : small_primes) {
-            if (n % p == 0) return n == p;
-        }
-        
-        return true;
-    } catch (const std::exception& e) {
-        // Number is too large for unsigned long, continue with GMP
-    }
+bool MFPMethod2::ultrafastFactorization(const mpz_t n, mpz_t divisor) {
+    // Try each multiplier k in {1, 3, 7, 9}
+    const int ks[] = {1, 3, 7, 9};
     
-    mpz_t n;
-    mpz_init(n);
-    
-    // Convert string to mpz_t
-    mpz_set_str(n, number.c_str(), 10);
-    
-    // Check if n is divisible by small primes
-    const unsigned long small_primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47};
-    for (unsigned long p : small_primes) {
-        if (mpz_divisible_ui_p(n, p) != 0) {
-            // Check if n is equal to p
-            if (mpz_cmp_ui(n, p) == 0) {
-                mpz_clear(n);
-                return true;
-            }
-            
-            mpz_clear(n);
-            return false;
+    for (int k : ks) {
+        if (testUltrafastDivisor(n, k, divisor)) {
+            return true;
         }
     }
     
-    // Check if n passes Fermat's little theorem for base 2
-    // If 2^(n-1) ≡ 1 (mod n), n might be prime
-    mpz_t base, exp, result;
-    mpz_init_set_ui(base, 2);
-    mpz_init(exp);
-    mpz_init(result);
-    
-    // exp = n - 1
-    mpz_sub_ui(exp, n, 1);
-    
-    // result = 2^(n-1) mod n
-    mpz_powm(result, base, exp, n);
-    
-    // Check if result is 1
-    bool is_probable_prime = (mpz_cmp_ui(result, 1) == 0);
-    
-    // Free resources
-    mpz_clear(n);
-    mpz_clear(base);
-    mpz_clear(exp);
-    mpz_clear(result);
-    
-    return is_probable_prime;
+    return false;
 }
 
-bool MFPMethod2::ultrafastFactorization(const std::string& number, std::vector<std::string>& factors) {
-    mpz_t n, factor, temp;
-    mpz_init(n);
-    mpz_init(factor);
-    mpz_init(temp);
+bool MFPMethod2::testUltrafastDivisor(const mpz_t n, int k, mpz_t divisor) {
+    mpz_t nk, A, sqrtA;
+    mpz_inits(nk, A, sqrtA, nullptr);
     
-    // Convert string to mpz_t
-    mpz_set_str(n, number.c_str(), 10);
+    // Calculate nk = n * k
+    mpz_mul_ui(nk, n, k);
     
-    // Check if n is even
-    if (mpz_even_p(n) != 0) {
-        factors.push_back("2");
-        mpz_divexact_ui(n, n, 2);
+    // Calculate A = floor(nk / 10)
+    mpz_fdiv_q_ui(A, nk, 10);
+    
+    // Calculate d0 = nk % 10
+    unsigned long d0 = mpz_fdiv_ui(nk, 10);
+    
+    // Calculate q_max = 2 * sqrt(A)
+    mpz_sqrt(sqrtA, A);
+    unsigned long q_max = mpz_get_ui(sqrtA) * 2;
+    
+    // Get A as unsigned long for calculations
+    unsigned long A_ul = mpz_get_ui(A);
+    
+    // Try each q from 1 to q_max
+    for (unsigned long q = 1; q <= q_max; ++q) {
+        // Calculate denom = 10*q + 1
+        unsigned long denom = 10 * q + 1;
         
-        // Convert n back to string and recursively factorize
-        char* n_str = mpz_get_str(nullptr, 10, n);
-        std::string remaining(n_str);
-        free(n_str);
+        // Calculate qd0 = q * d0
+        unsigned long qd0 = q * d0;
         
-        std::vector<std::string> remaining_factors = factorize(remaining);
-        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
+        // Skip if qd0 > A
+        if (qd0 > A_ul) continue;
         
-        mpz_clear(n);
-        mpz_clear(factor);
-        mpz_clear(temp);
+        // Calculate numer = A - qd0
+        unsigned long numer_ul = A_ul - qd0;
         
+        // Check if i is an integer (numer is divisible by denom)
+        if (numer_ul % denom != 0) continue;
+        
+        // Calculate i = numer / denom
+        unsigned long i = numer_ul / denom;
+        
+        // Calculate d = d0 + 10*i
+        unsigned long d = d0 + 10 * i;
+        
+        // Skip if d <= 1
+        if (d <= 1) continue;
+        
+        // Additional structural filter: Check if (A - i) % d == 0
+        unsigned long Ai_ul = A_ul - i;
+        if (Ai_ul % d != 0) continue;
+        
+        // Check if n is divisible by d
+        if (!mpz_divisible_ui_p(n, d)) continue;
+        
+        // Found a divisor
+        mpz_set_ui(divisor, d);
+        mpz_clears(nk, A, sqrtA, nullptr);
         return true;
     }
     
-    // Try Pollard's rho algorithm
-    mpz_t x, y, d, one;
-    mpz_init(x);
-    mpz_init(y);
-    mpz_init(d);
-    mpz_init_set_ui(one, 1);
-    
-    // Initialize x and y to 2
-    mpz_set_ui(x, 2);
-    mpz_set_ui(y, 2);
-    
-    // Initialize d to 1
-    mpz_set_ui(d, 1);
-    
-    // Define the polynomial f(x) = x^2 + 1 mod n
-    auto f = [&](mpz_t result, const mpz_t x) {
-        mpz_mul(result, x, x);
-        mpz_add_ui(result, result, 1);
-        mpz_mod(result, result, n);
-    };
-    
-    // Main loop
-    while (mpz_cmp_ui(d, 1) == 0) {
-        // x = f(x)
-        f(x, x);
-        
-        // y = f(f(y))
-        f(y, y);
-        f(y, y);
-        
-        // d = gcd(|x - y|, n)
-        mpz_sub(temp, x, y);
-        mpz_abs(temp, temp);
-        mpz_gcd(d, temp, n);
-    }
-    
-    // Check if we found a proper factor
-    if (mpz_cmp(d, n) != 0) {
-        // Found a factor
-        char* factor1 = mpz_get_str(nullptr, 10, d);
-        factors.push_back(std::string(factor1));
-        free(factor1);
-        
-        // Calculate the other factor
-        mpz_divexact(temp, n, d);
-        char* factor2 = mpz_get_str(nullptr, 10, temp);
-        factors.push_back(std::string(factor2));
-        free(factor2);
-        
-        mpz_clear(n);
-        mpz_clear(factor);
-        mpz_clear(temp);
-        mpz_clear(x);
-        mpz_clear(y);
-        mpz_clear(d);
-        mpz_clear(one);
-        
-        return true;
-    }
-    
-    // If we get here, the method failed to find factors
-    mpz_clear(n);
-    mpz_clear(factor);
-    mpz_clear(temp);
-    mpz_clear(x);
-    mpz_clear(y);
-    mpz_clear(d);
-    mpz_clear(one);
-    
+    // No divisor found
+    mpz_clears(nk, A, sqrtA, nullptr);
     return false;
 }
 

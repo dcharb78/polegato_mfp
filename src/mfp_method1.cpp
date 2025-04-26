@@ -1,5 +1,4 @@
-#include "mfp_method1.h"
-#include <gmp.h>
+#include "../include/mfp_method1.h"
 #include <iostream>
 #include <cmath>
 
@@ -10,13 +9,40 @@ MFPMethod1::MFPMethod1() {
 }
 
 MFPMethod1::~MFPMethod1() {
-    // Nothing to clean up
+    // Clean up resources
 }
 
 bool MFPMethod1::isPrime(const std::string& number) {
-    // For Method 1, we'll use the base class implementation
-    // which uses Miller-Rabin for large numbers
-    return MFPBase::isPrime(number);
+    // For small numbers, use the base class implementation
+    try {
+        unsigned long n = std::stoul(number);
+        if (n < 1000000) {
+            return MFPBase::isPrime(number);
+        }
+    } catch (const std::exception& e) {
+        // Number is too large for unsigned long, continue with MFP approach
+    }
+    
+    // For larger numbers, try to find a divisor using the MFP approach
+    mpz_t n, divisor;
+    mpz_inits(n, divisor, nullptr);
+    
+    // Convert string to mpz_t
+    strToMpz(number, n);
+    
+    // Check if n is divisible by small primes
+    if (checkSmallPrimes(n, divisor)) {
+        mpz_clears(n, divisor, nullptr);
+        return false;
+    }
+    
+    // Try to find a divisor using the Expanded q Factorization method
+    bool hasDivisor = expandedQFactorization(n, divisor);
+    
+    mpz_clears(n, divisor, nullptr);
+    
+    // If we found a divisor, the number is not prime
+    return !hasDivisor;
 }
 
 std::vector<std::string> MFPMethod1::factorize(const std::string& number) {
@@ -28,134 +54,122 @@ std::vector<std::string> MFPMethod1::factorize(const std::string& number) {
         return factors;
     }
     
-    // Use the Expanded q Factorization method
-    if (expandedQFactorization(number, factors)) {
+    mpz_t n, divisor, quotient;
+    mpz_inits(n, divisor, quotient, nullptr);
+    
+    // Convert string to mpz_t
+    strToMpz(number, n);
+    
+    // Check if n is divisible by small primes
+    if (checkSmallPrimes(n, divisor)) {
+        // Add the small prime to the factors
+        factors.push_back(mpzToStr(divisor));
+        
+        // Calculate the quotient
+        mpz_divexact(quotient, n, divisor);
+        
+        // Recursively factorize the quotient
+        std::vector<std::string> remaining_factors = factorize(mpzToStr(quotient));
+        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
+        
+        mpz_clears(n, divisor, quotient, nullptr);
         return factors;
     }
     
-    // Fallback to trial division for small numbers
-    try {
-        unsigned long n = std::stoul(number);
-        if (n <= 1000000) {
-            // Trial division for small numbers
-            if (n <= 1) {
-                return factors; // Empty for 0 and 1
-            }
-            
-            while (n % 2 == 0) {
-                factors.push_back("2");
-                n /= 2;
-            }
-            
-            for (unsigned long i = 3; i * i <= n; i += 2) {
-                while (n % i == 0) {
-                    factors.push_back(std::to_string(i));
-                    n /= i;
-                }
-            }
-            
-            if (n > 1) {
-                factors.push_back(std::to_string(n));
-            }
-            
-            return factors;
-        }
-    } catch (const std::exception& e) {
-        // Number is too large for unsigned long, continue with GMP
+    // Try to find a divisor using the Expanded q Factorization method
+    if (expandedQFactorization(n, divisor)) {
+        // Add the divisor to the factors
+        factors.push_back(mpzToStr(divisor));
+        
+        // Calculate the quotient
+        mpz_divexact(quotient, n, divisor);
+        
+        // Recursively factorize the quotient
+        std::vector<std::string> remaining_factors = factorize(mpzToStr(quotient));
+        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
+        
+        mpz_clears(n, divisor, quotient, nullptr);
+        return factors;
     }
     
-    // If all else fails, just return the number itself
+    // If we get here, we couldn't find any factors, so the number must be prime
     factors.push_back(number);
+    
+    mpz_clears(n, divisor, quotient, nullptr);
     return factors;
 }
 
-std::string MFPMethod1::findNextPrime(const std::string& number) {
-    // Use the base class implementation
-    return MFPBase::findNextPrime(number);
+bool MFPMethod1::expandedQFactorization(const mpz_t n, mpz_t divisor) {
+    // Try each multiplier k in {1, 3, 7, 9}
+    const int ks[] = {1, 3, 7, 9};
+    
+    for (int k : ks) {
+        if (testWithExpandedQ(n, k, divisor)) {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
-bool MFPMethod1::expandedQFactorization(const std::string& number, std::vector<std::string>& factors) {
-    mpz_t n, q, a, b, gcd;
-    mpz_init(n);
-    mpz_init(q);
-    mpz_init(a);
-    mpz_init(b);
-    mpz_init(gcd);
+bool MFPMethod1::testWithExpandedQ(const mpz_t n, int k, mpz_t divisor) {
+    mpz_t nk, A, A_pow23;
+    mpz_inits(nk, A, A_pow23, nullptr);
     
-    // Convert string to mpz_t
-    mpz_set_str(n, number.c_str(), 10);
+    // Calculate nk = n * k
+    mpz_mul_ui(nk, n, k);
     
-    // Check if n is even
-    if (mpz_even_p(n) != 0) {
-        factors.push_back("2");
-        mpz_divexact_ui(n, n, 2);
+    // Calculate A = floor(nk / 10)
+    mpz_fdiv_q_ui(A, nk, 10);
+    
+    // Calculate d0 = nk % 10
+    unsigned long d0 = mpz_fdiv_ui(nk, 10);
+    
+    // Calculate q_max = A^(2/3)
+    mpz_root(A_pow23, A, 3);  // A^(1/3)
+    mpz_mul(A_pow23, A_pow23, A_pow23);  // A^(2/3)
+    unsigned long long q_max = mpz_get_ui(A_pow23);
+    
+    // Get A as unsigned long for calculations
+    unsigned long A_ul = mpz_get_ui(A);
+    
+    // Try each q from 1 to q_max
+    for (unsigned long long q = 1; q <= q_max; ++q) {
+        // Calculate denom = 10*q + 1
+        unsigned long long denom = 10 * q + 1;
         
-        // Convert n back to string and recursively factorize
-        char* n_str = mpz_get_str(nullptr, 10, n);
-        std::string remaining(n_str);
-        free(n_str);
+        // Calculate qd0 = q * d0
+        unsigned long long qd0 = q * d0;
         
-        std::vector<std::string> remaining_factors = factorize(remaining);
-        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
+        // Skip if qd0 > A
+        if (qd0 > A_ul) continue;
         
-        mpz_clear(n);
-        mpz_clear(q);
-        mpz_clear(a);
-        mpz_clear(b);
-        mpz_clear(gcd);
+        // Calculate numer = A - qd0
+        unsigned long long numer = A_ul - qd0;
         
+        // Check if i is an integer (numer is divisible by denom)
+        if (numer % denom != 0) continue;
+        
+        // Calculate i = numer / denom
+        unsigned long long i = numer / denom;
+        
+        // Calculate d = d0 + 10*i
+        unsigned long long d = d0 + 10 * i;
+        
+        // Skip if d <= 1
+        if (d <= 1) continue;
+        
+        // Check if n is divisible by d
+        if (!mpz_divisible_ui_p(n, d)) continue;
+        
+        // Found a divisor
+        mpz_set_ui(divisor, d);
+        mpz_clears(nk, A, A_pow23, nullptr);
         return true;
     }
     
-    // Try to find q such that n = a^2 - b^2 = (a+b)(a-b)
-    mpz_sqrt(q, n);
-    mpz_add_ui(q, q, 1); // Start with q = sqrt(n) + 1
-    
-    // Try different values of q
-    for (int i = 0; i < 1000; i++) {
-        // Calculate a^2 = q^2 - n
-        mpz_mul(a, q, q);
-        mpz_sub(a, a, n);
-        
-        // Check if a is a perfect square
-        if (mpz_perfect_square_p(a) != 0) {
-            // Found a factorization
-            mpz_sqrt(a, a); // a = sqrt(q^2 - n)
-            
-            // b = q - a
-            mpz_sub(b, q, a);
-            
-            // First factor = q + a
-            mpz_add(gcd, q, a);
-            char* factor1 = mpz_get_str(nullptr, 10, gcd);
-            factors.push_back(std::string(factor1));
-            free(factor1);
-            
-            // Second factor = q - a
-            char* factor2 = mpz_get_str(nullptr, 10, b);
-            factors.push_back(std::string(factor2));
-            free(factor2);
-            
-            mpz_clear(n);
-            mpz_clear(q);
-            mpz_clear(a);
-            mpz_clear(b);
-            mpz_clear(gcd);
-            
-            return true;
-        }
-        
-        // Try next q
-        mpz_add_ui(q, q, 1);
-    }
-    
-    // If we get here, the method failed to find factors
-    mpz_clear(n);
-    mpz_clear(q);
-    mpz_clear(a);
-    mpz_clear(b);
-    mpz_clear(gcd);
-    
+    // No divisor found
+    mpz_clears(nk, A, A_pow23, nullptr);
     return false;
 }
 

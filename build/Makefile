@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ubuntu/mfp_test
+CMAKE_SOURCE_DIR = /home/ubuntu/fixed_mfp
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ubuntu/mfp_test/build
+CMAKE_BINARY_DIR = /home/ubuntu/fixed_mfp/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -85,56 +85,11 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 .PHONY : rebuild_cache/fast
 
-# Special rule for the target list_install_components
-list_install_components:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
-.PHONY : list_install_components
-
-# Special rule for the target list_install_components
-list_install_components/fast: list_install_components
-.PHONY : list_install_components/fast
-
-# Special rule for the target install
-install: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
-	/usr/bin/cmake -P cmake_install.cmake
-.PHONY : install
-
-# Special rule for the target install
-install/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
-	/usr/bin/cmake -P cmake_install.cmake
-.PHONY : install/fast
-
-# Special rule for the target install/local
-install/local: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local
-
-# Special rule for the target install/local
-install/local/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
-	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
-.PHONY : install/local/fast
-
-# Special rule for the target install/strip
-install/strip: preinstall
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip
-
-# Special rule for the target install/strip
-install/strip/fast: preinstall/fast
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
-	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
-.PHONY : install/strip/fast
-
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu/mfp_test/build/CMakeFiles /home/ubuntu/mfp_test/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu/fixed_mfp/build/CMakeFiles /home/ubuntu/fixed_mfp/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu/mfp_test/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu/fixed_mfp/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -162,48 +117,37 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named mfp_app
+# Target rules for targets named mfp
 
 # Build rule for target.
-mfp_app: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mfp_app
-.PHONY : mfp_app
+mfp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mfp
+.PHONY : mfp
 
 # fast build rule for target.
-mfp_app/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/build
-.PHONY : mfp_app/fast
+mfp/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/build
+.PHONY : mfp/fast
 
-src/main.o: src/main.cpp.o
-.PHONY : src/main.o
+#=============================================================================
+# Target rules for targets named test_mfp
 
-# target to build an object file
-src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/main.cpp.o
-.PHONY : src/main.cpp.o
+# Build rule for target.
+test_mfp: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_mfp
+.PHONY : test_mfp
 
-src/main.i: src/main.cpp.i
-.PHONY : src/main.i
-
-# target to preprocess a source file
-src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/main.cpp.i
-.PHONY : src/main.cpp.i
-
-src/main.s: src/main.cpp.s
-.PHONY : src/main.s
-
-# target to generate assembly for a file
-src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/main.cpp.s
-.PHONY : src/main.cpp.s
+# fast build rule for target.
+test_mfp/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_mfp.dir/build.make CMakeFiles/test_mfp.dir/build
+.PHONY : test_mfp/fast
 
 src/mfp_base.o: src/mfp_base.cpp.o
 .PHONY : src/mfp_base.o
 
 # target to build an object file
 src/mfp_base.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_base.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_base.cpp.o
 .PHONY : src/mfp_base.cpp.o
 
 src/mfp_base.i: src/mfp_base.cpp.i
@@ -211,7 +155,7 @@ src/mfp_base.i: src/mfp_base.cpp.i
 
 # target to preprocess a source file
 src/mfp_base.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_base.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_base.cpp.i
 .PHONY : src/mfp_base.cpp.i
 
 src/mfp_base.s: src/mfp_base.cpp.s
@@ -219,7 +163,7 @@ src/mfp_base.s: src/mfp_base.cpp.s
 
 # target to generate assembly for a file
 src/mfp_base.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_base.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_base.cpp.s
 .PHONY : src/mfp_base.cpp.s
 
 src/mfp_method1.o: src/mfp_method1.cpp.o
@@ -227,7 +171,7 @@ src/mfp_method1.o: src/mfp_method1.cpp.o
 
 # target to build an object file
 src/mfp_method1.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_method1.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method1.cpp.o
 .PHONY : src/mfp_method1.cpp.o
 
 src/mfp_method1.i: src/mfp_method1.cpp.i
@@ -235,7 +179,7 @@ src/mfp_method1.i: src/mfp_method1.cpp.i
 
 # target to preprocess a source file
 src/mfp_method1.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_method1.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method1.cpp.i
 .PHONY : src/mfp_method1.cpp.i
 
 src/mfp_method1.s: src/mfp_method1.cpp.s
@@ -243,7 +187,7 @@ src/mfp_method1.s: src/mfp_method1.cpp.s
 
 # target to generate assembly for a file
 src/mfp_method1.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_method1.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method1.cpp.s
 .PHONY : src/mfp_method1.cpp.s
 
 src/mfp_method2.o: src/mfp_method2.cpp.o
@@ -251,7 +195,7 @@ src/mfp_method2.o: src/mfp_method2.cpp.o
 
 # target to build an object file
 src/mfp_method2.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_method2.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method2.cpp.o
 .PHONY : src/mfp_method2.cpp.o
 
 src/mfp_method2.i: src/mfp_method2.cpp.i
@@ -259,7 +203,7 @@ src/mfp_method2.i: src/mfp_method2.cpp.i
 
 # target to preprocess a source file
 src/mfp_method2.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_method2.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method2.cpp.i
 .PHONY : src/mfp_method2.cpp.i
 
 src/mfp_method2.s: src/mfp_method2.cpp.s
@@ -267,7 +211,7 @@ src/mfp_method2.s: src/mfp_method2.cpp.s
 
 # target to generate assembly for a file
 src/mfp_method2.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_method2.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method2.cpp.s
 .PHONY : src/mfp_method2.cpp.s
 
 src/mfp_method3.o: src/mfp_method3.cpp.o
@@ -275,7 +219,7 @@ src/mfp_method3.o: src/mfp_method3.cpp.o
 
 # target to build an object file
 src/mfp_method3.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_method3.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method3.cpp.o
 .PHONY : src/mfp_method3.cpp.o
 
 src/mfp_method3.i: src/mfp_method3.cpp.i
@@ -283,7 +227,7 @@ src/mfp_method3.i: src/mfp_method3.cpp.i
 
 # target to preprocess a source file
 src/mfp_method3.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_method3.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method3.cpp.i
 .PHONY : src/mfp_method3.cpp.i
 
 src/mfp_method3.s: src/mfp_method3.cpp.s
@@ -291,32 +235,32 @@ src/mfp_method3.s: src/mfp_method3.cpp.s
 
 # target to generate assembly for a file
 src/mfp_method3.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_method3.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method3.cpp.s
 .PHONY : src/mfp_method3.cpp.s
 
-src/mfp_system.o: src/mfp_system.cpp.o
-.PHONY : src/mfp_system.o
+test/test_mfp.o: test/test_mfp.cpp.o
+.PHONY : test/test_mfp.o
 
 # target to build an object file
-src/mfp_system.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_system.cpp.o
-.PHONY : src/mfp_system.cpp.o
+test/test_mfp.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_mfp.dir/build.make CMakeFiles/test_mfp.dir/test/test_mfp.cpp.o
+.PHONY : test/test_mfp.cpp.o
 
-src/mfp_system.i: src/mfp_system.cpp.i
-.PHONY : src/mfp_system.i
+test/test_mfp.i: test/test_mfp.cpp.i
+.PHONY : test/test_mfp.i
 
 # target to preprocess a source file
-src/mfp_system.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_system.cpp.i
-.PHONY : src/mfp_system.cpp.i
+test/test_mfp.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_mfp.dir/build.make CMakeFiles/test_mfp.dir/test/test_mfp.cpp.i
+.PHONY : test/test_mfp.cpp.i
 
-src/mfp_system.s: src/mfp_system.cpp.s
-.PHONY : src/mfp_system.s
+test/test_mfp.s: test/test_mfp.cpp.s
+.PHONY : test/test_mfp.s
 
 # target to generate assembly for a file
-src/mfp_system.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_app.dir/build.make CMakeFiles/mfp_app.dir/src/mfp_system.cpp.s
-.PHONY : src/mfp_system.cpp.s
+test/test_mfp.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_mfp.dir/build.make CMakeFiles/test_mfp.dir/test/test_mfp.cpp.s
+.PHONY : test/test_mfp.cpp.s
 
 # Help Target
 help:
@@ -325,15 +269,9 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
-	@echo "... install"
-	@echo "... install/local"
-	@echo "... install/strip"
-	@echo "... list_install_components"
 	@echo "... rebuild_cache"
-	@echo "... mfp_app"
-	@echo "... src/main.o"
-	@echo "... src/main.i"
-	@echo "... src/main.s"
+	@echo "... mfp"
+	@echo "... test_mfp"
 	@echo "... src/mfp_base.o"
 	@echo "... src/mfp_base.i"
 	@echo "... src/mfp_base.s"
@@ -346,9 +284,9 @@ help:
 	@echo "... src/mfp_method3.o"
 	@echo "... src/mfp_method3.i"
 	@echo "... src/mfp_method3.s"
-	@echo "... src/mfp_system.o"
-	@echo "... src/mfp_system.i"
-	@echo "... src/mfp_system.s"
+	@echo "... test/test_mfp.o"
+	@echo "... test/test_mfp.i"
+	@echo "... test/test_mfp.s"
 .PHONY : help
 
 

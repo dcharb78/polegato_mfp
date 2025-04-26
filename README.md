@@ -1,142 +1,87 @@
-# MFP Implementation
+# Modular Factorization Pattern (MFP)
 
-This repository contains an implementation of the Modular Factorization Pattern (MFP) algorithm created by [Marlon F. Polegato](https://www.linkedin.com/in/marlonpolegato/). The implementation includes automatic hardware detection, GPU acceleration, and dynamic resource allocation to optimize performance across different hardware configurations.
+This repository contains an implementation of the Modular Factorization Pattern (MFP) as described in the accompanying PDF document. The MFP is a novel approach to integer factorization based on decimal redistribution patterns.
 
-## Attribution
+## Overview
 
-The Modular Factorization Pattern (MFP) algorithm was created by **Marlon F. Polegato**. This repository only packages his algorithm for testing purposes with enhanced features for hardware detection and GPU acceleration.
+The implementation includes three methods of the MFP:
 
-## Features
+1. **Method 1: Expanded q Factorization** - Uses a sweep of q values up to a limit based on A^(2/3)
+2. **Method 2: Ultrafast with Structural Filter** - Similar to Method 1 but with an additional structural filter
+3. **Method 3: Parallelized with Dynamic Blocks** - Divides the search into blocks with parallel processing
 
-- **Three MFP Methods**:
-  - Method 1: Expanded q Factorization
-  - Method 2: Ultrafast with Structural Filter
-  - Method 3: Parallelized with Dynamic Blocks
-
-- **Automatic Hardware Detection**:
-  - CPU detection (architecture, cores, features)
-  - Memory and storage detection
-  - GPU detection for both NVIDIA and Apple hardware
-
-- **GPU Acceleration**:
-  - CUDA implementation for NVIDIA GPUs
-  - Metal implementation for Apple GPUs
-  - Optimized kernels for all three MFP methods
-
-- **Dynamic Resource Allocation**:
-  - Automatic selection of optimal hardware
-  - Multiple execution strategies (CPU, CUDA, Metal, Hybrid)
-  - Performance benchmarking for strategy selection
-
-- **Performance Metrics**:
-  - Execution time measurement
-  - Memory usage tracking
-  - Thread utilization monitoring
-  - Detailed performance reports
+All three methods share a common mathematical foundation based on the formula:
+- `nk = n * k` where k ∈ {1, 3, 7, 9}
+- `A = floor(nk / 10)`
+- `d0 = nk % 10`
+- `d = d0 + 10*i`
+- `i = (A - qd0)/(10q + 1)`
 
 ## Requirements
 
-- C++17 compatible compiler
-- CMake 3.10 or higher
+- C++11 or later
 - GMP (GNU Multiple Precision Arithmetic Library)
-- CUDA Toolkit 11.0+ (optional, for NVIDIA GPU acceleration)
-- Metal framework (optional, for Apple GPU acceleration)
+- CMake 3.10 or later
+- pthread support
 
 ## Building
 
 ```bash
-# Clone the repository
-git clone https://github.com/dcharb78/polegato_mfp.git
-cd polegato_mfp
-
-# Create build directory
-mkdir build
+mkdir -p build
 cd build
-
-# Configure with CMake
 cmake ..
-
-# Build
 make
 ```
 
-## Usage
+## Testing
 
-### Command-Line Interface
+After building, run the test executable:
 
 ```bash
-# Check if a number is prime
-./mfp_app isprime 104729
-
-# Factorize a number
-./mfp_app factorize 123456789
-
-# Find the next prime after a number
-./mfp_app nextprime 104729
-
-# Run a benchmark with 2000-bit numbers
-./mfp_app benchmark 2000
-
-# Display system information
-./mfp_app sysinfo
-
-# Use Method 3 with CUDA acceleration
-./mfp_app isprime 104729 --method 3 --strategy cuda
+./test_mfp
 ```
 
-### API Usage
+This will test all three methods with example numbers from the PDF.
+
+## Usage
+
+The library provides three classes for factorization:
+
+- `MFPMethod1` - Implements the Expanded q Factorization method
+- `MFPMethod2` - Implements the Ultrafast with Structural Filter method
+- `MFPMethod3` - Implements the Parallelized with Dynamic Blocks method
+
+Example usage:
 
 ```cpp
-#include "mfp_system.h"
-#include <gmp.h>
+#include "mfp_method1.h"
+#include <iostream>
+#include <vector>
+#include <string>
 
 int main() {
-    // Initialize the system
-    mfp::getResourceManager().initialize();
-    mfp::getConfigurationManager().initialize(mfp::getResourceManager());
+    mfp::MFPMethod1 method;
+    std::string number = "9007199254740991";
     
-    // Create MFP implementation (automatically selects best method and strategy)
-    auto mfp = mfp::getResourceManager().createMFP(1);
+    std::vector<std::string> factors = method.factorize(number);
     
-    // Enable performance metrics
-    mfp->enablePerformanceMetrics(true);
-    
-    // Check if a number is prime
-    mpz_t number;
-    mpz_init_set_str(number, "104729", 10);
-    
-    bool is_prime;
-    mfp->isPrime(number, is_prime);
-    
-    std::cout << "Is prime: " << (is_prime ? "Yes" : "No") << std::endl;
-    
-    // Get performance metrics
-    const mfp::PerformanceMetrics& metrics = mfp->getPerformanceMetrics();
-    std::cout << "Execution time: " << metrics.total_execution_time_ms << " ms" << std::endl;
-    
-    // Clean up
-    mpz_clear(number);
+    std::cout << "Factors of " << number << ":" << std::endl;
+    for (const auto& factor : factors) {
+        std::cout << factor << std::endl;
+    }
     
     return 0;
 }
 ```
 
-## Documentation
+## Performance
 
-For detailed documentation, see the following files:
+The three methods have different performance characteristics:
 
-- [Enhanced Capabilities](docs/enhanced_capabilities.md): Comprehensive documentation of the enhanced features
-- [Original MFP Paper](Modular%20Factorization%20Pattern%20M.F.P.pdf): The original paper describing the MFP algorithm
+- **Method 1** is suitable for general-purpose factorization
+- **Method 2** is faster for large numbers due to the additional structural filter
+- **Method 3** provides the best performance for very large numbers by utilizing parallel processing
 
-## License
+## Author
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License - see the [LICENSE](LICENSE) file for details.
-
-This license allows free use for academic and research purposes but prohibits commercial use. Attribution to Marlon F. Polegato is required for any use of this work.
-
-## Acknowledgements
-
-- Marlon F. Polegato for creating the MFP algorithm
-- The GMP team for the GNU Multiple Precision Arithmetic Library
-- NVIDIA for the CUDA toolkit
-- Apple for the Metal framework
+Daniel Charboneau

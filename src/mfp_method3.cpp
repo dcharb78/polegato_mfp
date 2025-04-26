@@ -1,11 +1,10 @@
-#include "mfp_method3.h"
-#include <gmp.h>
+#include "../include/mfp_method3.h"
 #include <iostream>
 #include <cmath>
-#include <vector>
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <vector>
 #include <functional>
 
 namespace mfp {
@@ -13,11 +12,11 @@ namespace mfp {
 MFPMethod3::MFPMethod3(int numThreads) {
     // Initialize Method 3 (Parallelized with Dynamic Blocks)
     m_numThreads = (numThreads > 0) ? numThreads : std::thread::hardware_concurrency();
-    if (m_numThreads == 0) m_numThreads = 1; // Fallback to single thread
+    if (m_numThreads == 0) m_numThreads = 8; // Default to 8 threads as specified in the PDF
 }
 
 MFPMethod3::~MFPMethod3() {
-    // Nothing to clean up
+    // Clean up resources
 }
 
 bool MFPMethod3::isPrime(const std::string& number) {
@@ -28,11 +27,29 @@ bool MFPMethod3::isPrime(const std::string& number) {
             return MFPBase::isPrime(number);
         }
     } catch (const std::exception& e) {
-        // Number is too large for unsigned long, continue with parallel implementation
+        // Number is too large for unsigned long, continue with MFP approach
     }
     
-    // For larger numbers, use parallel primality test
-    return parallelPrimalityTest(number);
+    // For larger numbers, try to find a divisor using the MFP approach
+    mpz_t n, divisor;
+    mpz_inits(n, divisor, nullptr);
+    
+    // Convert string to mpz_t
+    strToMpz(number, n);
+    
+    // Check if n is divisible by small primes
+    if (checkSmallPrimes(n, divisor)) {
+        mpz_clears(n, divisor, nullptr);
+        return false;
+    }
+    
+    // Try to find a divisor using the Parallelized with Dynamic Blocks method
+    bool hasDivisor = parallelizedFactorization(n, divisor);
+    
+    mpz_clears(n, divisor, nullptr);
+    
+    // If we found a divisor, the number is not prime
+    return !hasDivisor;
 }
 
 std::vector<std::string> MFPMethod3::factorize(const std::string& number) {
@@ -44,330 +61,239 @@ std::vector<std::string> MFPMethod3::factorize(const std::string& number) {
         return factors;
     }
     
-    // Use the parallel factorization method
-    if (parallelFactorization(number, factors)) {
+    mpz_t n, divisor, quotient;
+    mpz_inits(n, divisor, quotient, nullptr);
+    
+    // Convert string to mpz_t
+    strToMpz(number, n);
+    
+    // Check if n is divisible by small primes
+    if (checkSmallPrimes(n, divisor)) {
+        // Add the small prime to the factors
+        factors.push_back(mpzToStr(divisor));
+        
+        // Calculate the quotient
+        mpz_divexact(quotient, n, divisor);
+        
+        // Recursively factorize the quotient
+        std::vector<std::string> remaining_factors = factorize(mpzToStr(quotient));
+        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
+        
+        mpz_clears(n, divisor, quotient, nullptr);
         return factors;
     }
     
-    // Fallback to trial division for small numbers
-    try {
-        unsigned long n = std::stoul(number);
-        if (n <= 1000000) {
-            // Trial division for small numbers
-            if (n <= 1) {
-                return factors; // Empty for 0 and 1
-            }
-            
-            while (n % 2 == 0) {
-                factors.push_back("2");
-                n /= 2;
-            }
-            
-            for (unsigned long i = 3; i * i <= n; i += 2) {
-                while (n % i == 0) {
-                    factors.push_back(std::to_string(i));
-                    n /= i;
-                }
-            }
-            
-            if (n > 1) {
-                factors.push_back(std::to_string(n));
-            }
-            
-            return factors;
-        }
-    } catch (const std::exception& e) {
-        // Number is too large for unsigned long, continue with GMP
+    // Try to find a divisor using the Parallelized with Dynamic Blocks method
+    if (parallelizedFactorization(n, divisor)) {
+        // Add the divisor to the factors
+        factors.push_back(mpzToStr(divisor));
+        
+        // Calculate the quotient
+        mpz_divexact(quotient, n, divisor);
+        
+        // Recursively factorize the quotient
+        std::vector<std::string> remaining_factors = factorize(mpzToStr(quotient));
+        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
+        
+        mpz_clears(n, divisor, quotient, nullptr);
+        return factors;
     }
     
-    // If all else fails, just return the number itself
+    // If we get here, we couldn't find any factors, so the number must be prime
     factors.push_back(number);
+    
+    mpz_clears(n, divisor, quotient, nullptr);
     return factors;
 }
 
-std::string MFPMethod3::findNextPrime(const std::string& number) {
-    // Use the base class implementation
-    return MFPBase::findNextPrime(number);
-}
-
-bool MFPMethod3::parallelPrimalityTest(const std::string& number) {
-    // Convert string to mpz_t
-    mpz_t n;
-    mpz_init(n);
-    mpz_set_str(n, number.c_str(), 10);
+bool MFPMethod3::parallelizedFactorization(const mpz_t n, mpz_t divisor) {
+    // Try each multiplier k in {1, 3, 7, 9}
+    const int ks[] = {1, 3, 7, 9};
     
-    // Check if n is 2 or 3
-    if (mpz_cmp_ui(n, 2) == 0 || mpz_cmp_ui(n, 3) == 0) {
-        mpz_clear(n);
-        return true;
-    }
-    
-    // Check if n is even or less than 2
-    if (mpz_even_p(n) != 0 || mpz_cmp_ui(n, 2) < 0) {
-        mpz_clear(n);
-        return false;
-    }
-    
-    // Write n-1 as 2^s * d where d is odd
-    mpz_t d;
-    mpz_init(d);
-    mpz_sub_ui(d, n, 1);  // d = n-1
-    unsigned int s = 0;
-    while (mpz_even_p(d) != 0) {
-        mpz_divexact_ui(d, d, 2);  // d = d/2
-        s++;
-    }
-    
-    // Number of Miller-Rabin iterations
-    const int iterations = 40;
-    
-    // Atomic flag to indicate if a witness was found
-    std::atomic<bool> is_composite(false);
-    
-    // Mutex for thread synchronization
-    std::mutex mtx;
-    
-    // Vector to hold thread objects
-    std::vector<std::thread> threads;
-    
-    // Function to test a range of witnesses
-    auto test_witnesses = [&](int start, int end) {
-        // Create thread-local GMP variables
-        mpz_t a, y, j, n_local, d_local, n_minus_1;
-        mpz_init(a);
-        mpz_init(y);
-        mpz_init(j);
-        mpz_init(n_local);
-        mpz_init(d_local);
-        mpz_init(n_minus_1);
+    for (int k : ks) {
+        mpz_t nk, A, sqrtA;
+        mpz_inits(nk, A, sqrtA, nullptr);
         
-        // Copy shared variables to thread-local variables
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            mpz_set(n_local, n);
-            mpz_set(d_local, d);
-            mpz_sub_ui(n_minus_1, n_local, 1);
-        }
+        // Calculate nk = n * k
+        mpz_mul_ui(nk, n, k);
         
-        // Test witnesses in the assigned range
-        for (int i = start; i < end && !is_composite; i++) {
-            // Set a to i+2 (witnesses start from 2)
-            mpz_set_ui(a, i + 2);
+        // Calculate A = floor(nk / 10)
+        mpz_fdiv_q_ui(A, nk, 10);
+        
+        // Calculate d0 = nk % 10
+        unsigned long d0 = mpz_fdiv_ui(nk, 10);
+        
+        // Get A as unsigned long for calculations
+        unsigned long A_ul = mpz_get_ui(A);
+        
+        // Calculate sqrt(A) for limits
+        mpz_sqrt(sqrtA, A);
+        unsigned long sqrtA_ul = mpz_get_ui(sqrtA);
+        
+        // Calculate i_max = sqrt(A)/10 + 2
+        unsigned long i_max = sqrtA_ul / 10 + 2;
+        
+        // Calculate q_max = 2*sqrt(A)
+        unsigned long q_max = sqrtA_ul * 2;
+        
+        // Calculate i_est (estimate for i)
+        unsigned long i_est = sqrtA_ul / 10;
+        
+        // Atomic flag to indicate if a divisor was found
+        std::atomic<bool> found_divisor(false);
+        
+        // Shared variable to store the found divisor
+        unsigned long divisor_value = 0;
+        
+        // Mutex for thread synchronization
+        std::mutex mtx;
+        
+        // Vector to hold thread objects
+        std::vector<std::thread> threads;
+        
+        // Define the maximum number of blocks
+        const int MAX_BLOCKS_I = 16;
+        
+        // Calculate block size for i search
+        unsigned long block_size = (i_max + MAX_BLOCKS_I - 1) / MAX_BLOCKS_I;
+        if (block_size < 1) block_size = 1;
+        
+        // Calculate block size for q sweep
+        unsigned long q_block_size = (q_max + m_numThreads - 1) / m_numThreads;
+        if (q_block_size < 1) q_block_size = 1;
+        
+        // Create threads for i search (alternating above and below i_est)
+        for (int t = 0; t < m_numThreads / 2; ++t) {
+            // Block above i_est
+            unsigned long i_start_above = i_est + t * block_size;
+            unsigned long i_end_above = i_start_above + block_size;
+            if (i_end_above > i_max) i_end_above = i_max;
             
-            // Compute y = a^d mod n
-            mpz_powm(y, a, d_local, n_local);
-            
-            // If y == 1 or y == n-1, continue with next witness
-            if (mpz_cmp_ui(y, 1) == 0 || mpz_cmp(y, n_minus_1) == 0) {
-                continue;
+            if (i_start_above < i_end_above) {
+                threads.push_back(std::thread(&MFPMethod3::searchBlock, this, 
+                                             std::ref(n), k, i_start_above, i_end_above, 
+                                             A_ul, d0, std::ref(found_divisor), 
+                                             std::ref(divisor_value), std::ref(mtx)));
             }
             
-            // Perform the remaining r-1 squarings
-            bool may_be_prime = false;
-            for (unsigned int r = 1; r < s; r++) {
-                // y = y^2 mod n
-                mpz_powm_ui(y, y, 2, n_local);
+            // Block below i_est
+            if (i_est > t * block_size) {
+                unsigned long i_start_below = i_est - (t + 1) * block_size;
+                unsigned long i_end_below = i_est - t * block_size;
                 
-                // If y == n-1, break and continue with next witness
-                if (mpz_cmp(y, n_minus_1) == 0) {
-                    may_be_prime = true;
-                    break;
-                }
-                
-                // If y == 1, n is composite
-                if (mpz_cmp_ui(y, 1) == 0) {
-                    is_composite = true;
-                    break;
+                if (i_start_below < i_end_below) {
+                    threads.push_back(std::thread(&MFPMethod3::searchBlock, this, 
+                                                 std::ref(n), k, i_start_below, i_end_below, 
+                                                 A_ul, d0, std::ref(found_divisor), 
+                                                 std::ref(divisor_value), std::ref(mtx)));
                 }
             }
+        }
+        
+        // Create threads for q sweep
+        for (int t = 0; t < m_numThreads / 2; ++t) {
+            unsigned long q_start = t * q_block_size + 1; // q starts from 1
+            unsigned long q_end = q_start + q_block_size;
+            if (q_end > q_max) q_end = q_max;
             
-            // If we didn't find a reason to believe n might be prime, it's composite
-            if (!may_be_prime && !is_composite) {
-                is_composite = true;
+            if (q_start <= q_max) {
+                threads.push_back(std::thread(&MFPMethod3::searchQSweep, this, 
+                                             std::ref(n), k, q_start, q_end, 
+                                             A_ul, d0, std::ref(found_divisor), 
+                                             std::ref(divisor_value), std::ref(mtx)));
             }
         }
         
-        // Free thread-local GMP variables
-        mpz_clear(a);
-        mpz_clear(y);
-        mpz_clear(j);
-        mpz_clear(n_local);
-        mpz_clear(d_local);
-        mpz_clear(n_minus_1);
-    };
-    
-    // Divide the work among threads
-    int witnesses_per_thread = iterations / m_numThreads;
-    int remaining_witnesses = iterations % m_numThreads;
-    
-    int start = 0;
-    for (int i = 0; i < m_numThreads; i++) {
-        int thread_witnesses = witnesses_per_thread + (i < remaining_witnesses ? 1 : 0);
-        int end = start + thread_witnesses;
-        
-        threads.push_back(std::thread(test_witnesses, start, end));
-        start = end;
-    }
-    
-    // Wait for all threads to complete
-    for (auto& thread : threads) {
-        thread.join();
-    }
-    
-    // Free GMP variables
-    mpz_clear(n);
-    mpz_clear(d);
-    
-    // Return result
-    return !is_composite;
-}
-
-bool MFPMethod3::parallelFactorization(const std::string& number, std::vector<std::string>& factors) {
-    mpz_t n;
-    mpz_init(n);
-    
-    // Convert string to mpz_t
-    mpz_set_str(n, number.c_str(), 10);
-    
-    // Check if n is even
-    if (mpz_even_p(n) != 0) {
-        factors.push_back("2");
-        mpz_divexact_ui(n, n, 2);
-        
-        // Convert n back to string and recursively factorize
-        char* n_str = mpz_get_str(nullptr, 10, n);
-        std::string remaining(n_str);
-        free(n_str);
-        
-        std::vector<std::string> remaining_factors = factorize(remaining);
-        factors.insert(factors.end(), remaining_factors.begin(), remaining_factors.end());
-        
-        mpz_clear(n);
-        return true;
-    }
-    
-    // Mutex for thread synchronization
-    std::mutex mtx;
-    
-    // Atomic flag to indicate if a factor was found
-    std::atomic<bool> factor_found(false);
-    
-    // Vector to hold thread objects
-    std::vector<std::thread> threads;
-    
-    // Shared variables for the found factor
-    mpz_t found_factor;
-    mpz_init(found_factor);
-    
-    // Function to search for factors in a range
-    auto search_factors = [&](int thread_id) {
-        // Create thread-local GMP variables
-        mpz_t x, y, d, n_local, c;
-        mpz_init(x);
-        mpz_init(y);
-        mpz_init(d);
-        mpz_init(n_local);
-        mpz_init(c);
-        
-        // Copy shared variables to thread-local variables
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            mpz_set(n_local, n);
+        // Wait for all threads to complete
+        for (auto& thread : threads) {
+            thread.join();
         }
         
-        // Set c to a different value for each thread to increase chances of finding factors
-        mpz_set_ui(c, thread_id + 1);
-        
-        // Initialize x and y to 2
-        mpz_set_ui(x, 2);
-        mpz_set_ui(y, 2);
-        
-        // Initialize d to 1
-        mpz_set_ui(d, 1);
-        
-        // Define the polynomial f(x) = x^2 + c mod n
-        auto f = [&](mpz_t result, const mpz_t x) {
-            mpz_mul(result, x, x);
-            mpz_add(result, result, c);
-            mpz_mod(result, result, n_local);
-        };
-        
-        // Main loop
-        int iterations = 0;
-        while (mpz_cmp_ui(d, 1) == 0 && !factor_found && iterations < 100000) {
-            // x = f(x)
-            f(x, x);
-            
-            // y = f(f(y))
-            f(y, y);
-            f(y, y);
-            
-            // d = gcd(|x - y|, n)
-            mpz_sub(d, x, y);
-            mpz_abs(d, d);
-            mpz_gcd(d, d, n_local);
-            
-            iterations++;
+        // Check if a divisor was found
+        if (found_divisor) {
+            mpz_set_ui(divisor, divisor_value);
+            mpz_clears(nk, A, sqrtA, nullptr);
+            return true;
         }
         
-        // Check if we found a proper factor
-        if (mpz_cmp_ui(d, 1) > 0 && mpz_cmp(d, n_local) < 0) {
-            // Found a factor
-            std::lock_guard<std::mutex> lock(mtx);
-            if (!factor_found) {
-                factor_found = true;
-                mpz_set(found_factor, d);
-            }
-        }
-        
-        // Free thread-local GMP variables
-        mpz_clear(x);
-        mpz_clear(y);
-        mpz_clear(d);
-        mpz_clear(n_local);
-        mpz_clear(c);
-    };
-    
-    // Create threads
-    for (int i = 0; i < m_numThreads; i++) {
-        threads.push_back(std::thread(search_factors, i));
+        mpz_clears(nk, A, sqrtA, nullptr);
     }
-    
-    // Wait for all threads to complete
-    for (auto& thread : threads) {
-        thread.join();
-    }
-    
-    // Check if a factor was found
-    if (factor_found) {
-        // Add the found factor to the list
-        char* factor1 = mpz_get_str(nullptr, 10, found_factor);
-        factors.push_back(std::string(factor1));
-        free(factor1);
-        
-        // Calculate the other factor
-        mpz_t other_factor;
-        mpz_init(other_factor);
-        mpz_divexact(other_factor, n, found_factor);
-        
-        // Add the other factor to the list
-        char* factor2 = mpz_get_str(nullptr, 10, other_factor);
-        factors.push_back(std::string(factor2));
-        free(factor2);
-        
-        // Free GMP variables
-        mpz_clear(other_factor);
-        mpz_clear(found_factor);
-        mpz_clear(n);
-        
-        return true;
-    }
-    
-    // If we get here, the method failed to find factors
-    mpz_clear(found_factor);
-    mpz_clear(n);
     
     return false;
+}
+
+void MFPMethod3::searchBlock(const mpz_t n, int k, unsigned long i_start, unsigned long i_end, 
+                            unsigned long A_ul, unsigned long d0, std::atomic<bool>& found_divisor, 
+                            unsigned long& divisor_value, std::mutex& mtx) {
+    // Search for divisors in the given block of i values
+    for (unsigned long i = i_start; i < i_end && !found_divisor; ++i) {
+        // Calculate d = d0 + 10*i
+        unsigned long d = d0 + 10 * i;
+        
+        // Skip if d <= 1
+        if (d <= 1) continue;
+        
+        // Check if (A - i) % d == 0 (structural filter)
+        unsigned long Ai = A_ul - i;
+        if (Ai % d != 0) continue;
+        
+        // Check if n is divisible by d
+        if (mpz_divisible_ui_p(n, d)) {
+            // Found a divisor
+            std::lock_guard<std::mutex> lock(mtx);
+            if (!found_divisor) {
+                found_divisor = true;
+                divisor_value = d;
+            }
+            return;
+        }
+    }
+}
+
+void MFPMethod3::searchQSweep(const mpz_t n, int k, unsigned long q_start, unsigned long q_end, 
+                             unsigned long A_ul, unsigned long d0, std::atomic<bool>& found_divisor, 
+                             unsigned long& divisor_value, std::mutex& mtx) {
+    // Search for divisors using q sweep in the given range
+    for (unsigned long q = q_start; q <= q_end && !found_divisor; ++q) {
+        // Calculate denom = 10*q + 1
+        unsigned long denom = 10 * q + 1;
+        
+        // Calculate qd0 = q * d0
+        unsigned long qd0 = q * d0;
+        
+        // Skip if qd0 > A
+        if (qd0 > A_ul) continue;
+        
+        // Calculate numer = A - qd0
+        unsigned long numer = A_ul - qd0;
+        
+        // Check if i is an integer (numer is divisible by denom)
+        if (numer % denom != 0) continue;
+        
+        // Calculate i = numer / denom
+        unsigned long i = numer / denom;
+        
+        // Calculate d = d0 + 10*i
+        unsigned long d = d0 + 10 * i;
+        
+        // Skip if d <= 1
+        if (d <= 1) continue;
+        
+        // Check if (A - i) % d == 0 (structural filter)
+        unsigned long Ai = A_ul - i;
+        if (Ai % d != 0) continue;
+        
+        // Check if n is divisible by d
+        if (mpz_divisible_ui_p(n, d)) {
+            // Found a divisor
+            std::lock_guard<std::mutex> lock(mtx);
+            if (!found_divisor) {
+                found_divisor = true;
+                divisor_value = d;
+            }
+            return;
+        }
+    }
 }
 
 } // namespace mfp
