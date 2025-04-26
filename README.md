@@ -1,6 +1,6 @@
-# Modular Factorization Pattern (MFP)
+# Modular Factorization Pattern (MFP) Implementation
 
-This repository contains an implementation of the Modular Factorization Pattern (MFP) as described in the accompanying PDF document. The MFP is a novel approach to integer factorization based on decimal redistribution patterns.
+This repository contains a fixed implementation of the Modular Factorization Pattern (MFP) as described in the accompanying PDF document. The MFP is a novel approach to integer factorization based on decimal redistribution patterns.
 
 ## Overview
 
@@ -35,13 +35,18 @@ make
 
 ## Testing
 
-After building, run the test executable:
+After building, run the test executables:
 
 ```bash
+# Main test with numbers from the PDF
 ./test_mfp
-```
 
-This will test all three methods with example numbers from the PDF.
+# Test with a known large prime number
+./test_prime
+
+# Test with a composite number that has known factors
+./test_composite
+```
 
 ## Usage
 
@@ -54,7 +59,7 @@ The library provides three classes for factorization:
 Example usage:
 
 ```cpp
-#include "mfp_method1.h"
+#include "include/mfp_method1.h"
 #include <iostream>
 #include <vector>
 #include <string>
