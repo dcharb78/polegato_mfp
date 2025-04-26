@@ -1,0 +1,970 @@
+System has 32 hardware threads available
+Main thread ID: 254853633798176
+
+========================================
+Testing with number: 91
+========================================
+
+Starting Method 2 (Ultrafast with Structural Filter) on thread Starting Method 1 (Expanded q Factorization) on thread 254853618987360
+254853627441504
+Starting Method 3 (Parallelized with Dynamic Blocks) with 28 threads on thread 254853610533216
+MFPMethod3 initialized with 28 threads
+Parallelized factorization with k=1, using 28 threads
+i_max=2, q_max=6, i_est=0
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [0, 1)
+Method 2 (Ultrafast with Structural Filter)Method 1 (Expanded q Factorization) completed in  completed in 3.3414e-053.9896e-05 seconds (wall clock),  seconds (wall clock), 0.000123 seconds (CPU time)
+9.7e-05 seconds (CPU time)
+Thread 2 searching i-block above: [1, 2)
+Thread 254853602079072 started searching i-block [0, 1)
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 18 searching q-sweep: [1, 2]
+Thread 254853593624928 started searching i-block [1, 2)
+Thread 254853593624928 completed i-block search without finding divisor
+Thread 19 searching q-sweep: [2, 3]
+Thread 254853618987360 started searching q-sweep [1, 2]
+Thread 254853618987360 completed q-sweep search without finding divisor
+Thread 20 searching q-sweep: [3, 4]
+Thread 254853627441504 started searching q-sweep [2, 3]
+Thread 254853627441504 completed q-sweep search without finding divisor
+Thread 21 searching q-sweep: [4, 5]
+Thread 254853585170784 started searching q-sweep [3, 4]
+Thread 254853585170784 completed q-sweep search without finding divisor
+Thread 22 searching q-sweep: [5, 6]
+Thread 254853576716640 started searching q-sweep [4, 5]
+Thread 254853576716640 completed q-sweep search without finding divisor
+Thread 23 searching q-sweep: [6, 6]
+Thread 254853360120160 started searching q-sweep [5, 6]
+Thread 254853360120160 completed q-sweep search without finding divisor
+Created 8 threads for parallel search
+Thread 254853351666016 started searching q-sweep [6, 6]
+Thread 254853351666016 completed q-sweep search without finding divisor
+All threads completed for k=1
+Parallelized factorization with k=3, using 28 threads
+i_max=2, q_max=10, i_est=0
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [0, 1)
+Thread 2 searching i-block above: [1, 2)
+Thread 254853351666016 started searching i-block [0, 1)
+Thread 254853351666016 completed i-block search without finding divisor
+Thread 254853360120160 started searching i-block [1, 2)
+Thread 254853360120160 found divisor: Thread 18 searching q-sweep: [131
+, 2]
+Thread 19 searching q-sweep: [2, 3]
+Thread 254853576716640 started searching q-sweep [1, 2]
+Thread 254853576716640 completed q-sweep search without finding divisor
+Thread 254853585170784 started searching q-sweep [2, 3]
+Thread 254853585170784 completed q-sweep search without finding divisor
+Thread 20 searching q-sweep: [3, 4]
+Thread 21 searching q-sweep: [4, 5]
+Thread 254853627441504 started searching q-sweep [3, 4]
+Thread 254853627441504 completed q-sweep search without finding divisor
+Thread 22 searching q-sweep: [5, 6]
+Thread 254853618987360 started searching q-sweep [4, 5]
+Thread 254853618987360 completed q-sweep search without finding divisor
+Thread 23 searching q-sweep: [6, 7]
+Thread 254853602079072 started searching q-sweep [5, 6]
+Thread 254853602079072 completed q-sweep search without finding divisor
+Thread 24 searching q-sweep: [7, 8]
+Thread 254853593624928 started searching q-sweep [6, 7]
+Thread 254853593624928 completed q-sweep search without finding divisor
+Thread 25 searching q-sweep: [8, 9]
+Thread 254853343211872 started searching q-sweep [7, 8]
+Thread 254853343211872 completed q-sweep search without finding divisor
+Thread 26 searching q-sweep: [9, 10]
+Thread 254853334757728 started searching q-sweep [8, 9]
+Thread 254853334757728 completed q-sweep search without finding divisor
+Thread 27 searching q-sweep: [10, 10]
+Thread 254853326303584 started searching q-sweep [9, 10]
+Thread 254853326303584 completed q-sweep search without finding divisor
+Created 12 threads for parallel search
+Thread 254853317849440 started searching q-sweep [10, 10]
+Thread 254853317849440 completed q-sweep search without finding divisor
+All threads completed for k=3
+Found divisor: 13
+Method 3 (Parallelized with Dynamic Blocks) completed in 0.00076585 seconds (wall clock), 0.001036 seconds (CPU time)
+
+Results for number 91:
+Method 1 (Expanded q Factorization) found factors: 13, 7
+Method 2 (Ultrafast with Structural Filter) found factors: 13, 7
+Method 3 (Parallelized with Dynamic Blocks) found factors: 13, 7
+
+----------------------------------------
+
+
+========================================
+Testing with number: 1522605027922533
+========================================
+
+Starting Method 1 (Expanded q Factorization) on thread 254853610533216
+Starting Method 2 (Ultrafast with Structural Filter) on thread 254853317849440
+Starting Method 3 (Parallelized with Dynamic Blocks) with 28 threads on thread 254853326303584
+MFPMethod3 initialized with 28 threads
+Parallelized factorization with k=1, using 28 threads
+i_max=411314, q_max=8226258, i_est=411312
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [411312, 411314)
+Thread 1 searching i-block below: [403967, 411312)
+Thread 254853334757728 started searching i-block [411312, 411314)
+Thread 254853334757728 completed i-block search without finding divisor
+Thread 3 searching i-block below: [396622, 403967)
+Thread 254853627441504 started searching i-block [403967, 411312)
+Thread 5 searching i-block below: [389277, 396622)
+Thread 254853618987360 started searching i-block [396622, 403967)
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 7 searching i-block below: [381932, 389277)
+Thread 254853602079072 started searching i-block [389277, 396622)
+Thread 9 searching i-block below: [374587, 381932)
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 254853593624928 started searching i-block [381932, 389277)
+Thread 11 searching i-block below: [367242, 374587)
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 254853585170784 started searching i-block [374587, 381932)
+Thread 13 searching i-block below: [359897, 367242)
+Thread Thread 254853593624928 completed i-block search without finding divisor254853576716640 started searching i-block [367242, 374587)
+
+Thread 15 searching i-block below: [352552, 359897)
+Thread 254853585170784 completed i-block search without finding divisor
+Thread 254853360120160 started searching i-block [359897, 367242)
+Thread 17 searching i-block below: [345207, 352552)
+Thread 254853576716640 completed i-block search without finding divisor
+Thread 254853351666016 started searching i-block [352552, 359897)
+Thread 254853360120160 completed i-block search without finding divisor
+Thread 18 searching q-sweep: [1, 146899]
+Thread 254853343211872 started searching i-block [345207, 352552)
+Thread 19 searching q-sweep: [146899, 293797]
+Thread 254853351666016 completed i-block search without finding divisor
+Thread 254853309395296 started searching q-sweep [1, 146899]
+Thread 254853343211872 completed i-block search without finding divisor
+Thread 20 searching q-sweep: [293797, 440695]
+Thread 254853225902432 started searching q-sweep [146899, 293797]
+Thread 21 searching q-sweep: [440695, 587593]
+Thread 254853217448288 started searching q-sweep [293797, 440695]
+Thread 22 searching q-sweep: [587593, 734491]
+Thread 254853208994144 started searching q-sweep [440695, 587593]
+Thread 23 searching q-sweep: [734491, 881389]
+Thread Thread 24 searching q-sweep: [881389, 1028287]
+254853200540000 started searching q-sweep [587593, 734491]
+Thread 254853192085856 started searching q-sweep [734491, 881389]
+Thread 25 searching q-sweep: [1028287, 1175185]
+Thread 254853183631712 started searching q-sweep [881389, 1028287]
+Thread 26 searching q-sweep: [1175185, 1322083]
+Thread 254853175177568 started searching q-sweep [1028287, 1175185]
+Thread 27 searching q-sweep: [1322083, 1468981]
+Thread 254853166723424 started searching q-sweep [1175185, 1322083]
+Created 20 threads for parallel search
+Thread 254853158269280 started searching q-sweep [1322083, 1468981]
+Thread 254853309395296 completed q-sweep search without finding divisor
+Thread 254853208994144 completed q-sweep search without finding divisor
+Thread 254853200540000 completed q-sweep search without finding divisor
+Thread 254853217448288 completed q-sweep search without finding divisor
+Thread 254853192085856 completed q-sweep search without finding divisor
+Thread 254853225902432 completed q-sweep search without finding divisor
+Thread 254853183631712 completed q-sweep search without finding divisor
+Thread 254853175177568 completed q-sweep search without finding divisor
+Thread 254853166723424 completed q-sweep search without finding divisor
+Thread 254853158269280 completed q-sweep search without finding divisor
+All threads completed for k=1
+Parallelized factorization with k=3, using 28 threads
+i_max=712416, q_max=14248298, i_est=712414
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [712414, 712416)
+Thread 1 searching i-block below: [699692, 712414)
+Thread 254853158269280 started searching i-block [712414, 712416)
+Thread 254853158269280 completed i-block search without finding divisor
+Thread 3 searching i-block below: [686970, 699692)
+Thread 254853166723424 started searching i-block [699692, 712414)
+Thread 5 searching i-block below: [674248, 686970)
+Thread 7 searching i-block below: [661526, 674248)
+Thread 254853183631712 started searching i-block [674248, 686970)
+Thread 254853175177568 started searching i-block [686970, 699692)
+Thread 9 searching i-block below: [648804, 661526)
+Thread 254853627441504 started searching i-block [661526, 674248)
+Thread 254853166723424 completed i-block search without finding divisor
+Thread 11 searching i-block below: [636082, 648804)
+Thread 254853618987360 started searching i-block [648804, 661526)
+Thread 254853183631712 completed i-block search without finding divisor
+Thread 13 searching i-block below: [623360Thread Thread 254853175177568,  completed i-block search without finding divisor636082)
+254853602079072 started searching i-block [636082, 648804)
+
+Thread 15 searching i-block below: [610638, 623360)
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 254853593624928 started searching i-block [623360, 636082)
+Thread 17 searching i-block below: [597916, 610638)
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 254853585170784 started searching i-block [610638, 623360)
+Thread 18 searching q-sweep: [1, 254435]
+Thread 254853576716640 started searching i-block [597916, 610638)
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 19 searching q-sweep: [254435, 508869]
+Thread 254853360120160 started searching q-sweep [1, 254435]
+Thread 254853360120160Thread  found divisor: 254853576716640 completed i-block search without finding divisorThread 551069499791
+Thread 
+254853585170784254853593624928 completed i-block search without finding divisor
+ completed i-block search without finding divisor
+Thread 254853351666016 started searching q-sweep [254435, 508869]
+Thread 254853351666016 completed q-sweep search without finding divisor
+Thread 20 searching q-sweep: [508869, 763303]
+Thread 21 searching q-sweep: [763303, 1017737]
+Thread 254853343211872 started searching q-sweep [508869, 763303]
+Thread 254853343211872 completed q-sweep search without finding divisor
+Thread 22 searching q-sweep: [1017737, 1272171]
+Thread 254853334757728 started searching q-sweep [763303, 1017737]
+Thread 254853334757728 completed q-sweep search without finding divisor
+Thread 23 searching q-sweep: [1272171, 1526605]
+Thread 254853309395296 started searching q-sweep [1017737, 1272171]
+Thread 254853309395296 completed q-sweep search without finding divisor
+Thread 24 searching q-sweep: [1526605, 1781039]
+Thread 254853225902432 started searching q-sweep [1272171, 1526605]
+Thread 254853225902432 completed q-sweep search without finding divisor
+Thread 25 searching q-sweep: [1781039, 2035473]
+Thread 254853217448288 started searching q-sweep [1526605, 1781039]
+Thread 254853217448288 completed q-sweep search without finding divisor
+Thread 26 searching q-sweep: [2035473, 2289907]
+Thread 254853208994144 started searching q-sweep [1781039, 2035473]
+Thread 254853208994144 completed q-sweep search without finding divisor
+Thread 27 searching q-sweep: [2289907, 2544341]
+Thread 254853200540000 started searching q-sweep [2035473, 2289907]
+Thread 254853200540000 completed q-sweep search without finding divisor
+Created 20 threads for parallel search
+Thread 254853192085856 started searching q-sweep [2289907, 2544341]
+Thread 254853192085856 completed q-sweep search without finding divisor
+All threads completed for k=3
+Found divisor: 551069499791
+Parallelized factorization with k=1, using 28 threads
+i_max=411314, q_max=8226258, i_est=411312
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [411312, 411314)
+Thread 1 searching i-block below: [403967, 411312)
+Thread 254853192085856 started searching i-block [411312, 411314)
+Thread 254853192085856 completed i-block search without finding divisor
+Thread 3 searching i-block below: [396622, 403967)
+Thread 254853200540000 started searching i-block [403967, 411312)
+Thread 5 searching i-block below: [389277, 396622)
+Thread 254853208994144 started searching i-block [396622, 403967)
+Thread 7 searching i-block below: [381932, 389277)
+Thread 254853217448288 started searching i-block [389277, 396622)
+Thread 254853200540000 completed i-block search without finding divisor
+Thread 9 searching i-block below: [374587, 381932)
+Thread 254853627441504 started searching i-block [381932, 389277)
+Thread 254853208994144 completed i-block search without finding divisor
+Thread 11 searching i-block below: [367242, 374587)
+Thread 254853618987360 started searching i-block [374587, 381932)
+Thread 254853217448288 completed i-block search without finding divisor
+Thread 13 searching i-block below: [359897, 367242)
+Thread 254853602079072 started searching i-block [367242, 374587)
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 15 searching i-block below: [352552, 359897)
+Thread 254853593624928 started searching i-block [359897, 367242)
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 17 searching i-block below: [345207, 352552)
+Thread 254853585170784 started searching i-block [352552, 359897)
+Thread 18 searching q-sweep: [1, 146899]
+Thread 254853576716640 started searching i-block [345207, 352552)
+Thread 254853593624928 completed i-block search without finding divisor
+Thread 254853585170784 completed i-block search without finding divisor
+Thread 19 searching q-sweep: [146899, 293797]
+Thread 254853360120160 started searching q-sweep [1, 146899]
+Thread 254853576716640 completed i-block search without finding divisor
+Thread 20 searching q-sweep: [293797, 440695]
+Thread 254853351666016 started searching q-sweep [146899, 293797]
+Thread 21 searching q-sweep: [440695, 587593]
+Thread 254853343211872 started searching q-sweep [293797, 440695]
+Thread 22 searching q-sweep: [587593, 734491]
+Thread 254853334757728 started searching q-sweep [440695, 587593]
+Thread 23 searching q-sweep: [734491, 881389]
+Thread 254853309395296 started searching q-sweep [587593, 734491]
+Thread 24 searching q-sweep: [881389, 1028287]
+Thread 254853225902432 started searching q-sweep [734491, 881389]
+Thread 25 searching q-sweep: [1028287, 1175185]
+Thread 254853183631712 started searching q-sweep [881389, 1028287]
+Thread 26 searching q-sweep: [1175185, 1322083]
+Thread 254853175177568 started searching q-sweep [1028287, 1175185]
+Thread 27 searching q-sweep: [1322083, 1468981]
+Thread 254853166723424 started searching q-sweep [1175185, 1322083]
+Created 20 threads for parallel search
+Thread 254853158269280 started searching q-sweep [1322083, 1468981]
+Thread 254853360120160 completed q-sweep search without finding divisor
+Thread 254853351666016 completed q-sweep search without finding divisor
+Thread 254853343211872 completed q-sweep search without finding divisor
+Thread 254853334757728 completed q-sweep search without finding divisor
+Thread 254853309395296 completed q-sweep search without finding divisor
+Thread 254853225902432 completed q-sweep search without finding divisor
+Thread 254853183631712 completed q-sweep search without finding divisor
+Thread 254853175177568 completed q-sweep search without finding divisor
+Thread 254853166723424 completed q-sweep search without finding divisor
+Thread 254853158269280 completed q-sweep search without finding divisor
+All threads completed for k=1
+Parallelized factorization with k=3, using 28 threads
+i_max=712416, q_max=14248298, i_est=712414
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [712414, 712416)
+Thread 1 searching i-block below: [699692, 712414)
+Thread 254853158269280 started searching i-block [712414, 712416)
+Thread 254853158269280 completed i-block search without finding divisor
+Thread 3 searching i-block below: [686970, 699692)
+Thread 254853166723424 started searching i-block [699692, 712414)
+Thread 5 searching i-block below: [674248, 686970)
+Thread 254853175177568 started searching i-block [686970, 699692)
+Thread 7 searching i-block below: [661526, 674248)
+Thread 254853183631712 started searching i-block [674248, 686970)
+Thread 9 searching i-block below: [648804, 661526)
+Thread 254853627441504 started searching i-block [661526, 674248)
+Thread 11 searching i-block below: [636082, 648804)
+Thread 254853166723424 completed i-block search without finding divisor
+Thread 254853618987360 started searching i-block [648804, 661526)
+Thread 254853175177568 completed i-block search without finding divisor
+Thread 13 searching i-block below: [623360, 636082)
+Thread 254853602079072 started searching i-block [636082, 648804)
+Thread 254853183631712 completed i-block search without finding divisor
+Thread 15 searching i-block below: [610638, 623360)
+Thread 254853593624928 started searching i-block [623360, 636082)
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 17 searching i-block below: [597916, 610638)
+Thread 254853585170784 started searching i-block [610638, 623360)
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 18 searching q-sweep: [1, 254435]
+Thread 254853576716640 started searching i-block [597916, 610638)
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 19 searching q-sweep: [254435, 508869]
+Thread 254853360120160 started searching q-sweep [1, 254435]
+Thread 254853593624928 completed i-block search without finding divisor
+Thread 254853576716640 completed i-block search without finding divisor
+Thread Thread 254853360120160254853585170784 completed i-block search without finding divisor found divisor: 
+551069499791
+Thread 20 searching q-sweep: [508869, 763303Thread 254853351666016 started searching q-sweep [254435, 508869]
+Thread 254853351666016 completed q-sweep search without finding divisor
+]
+Thread 21 searching q-sweep: [763303, 1017737]
+Thread 254853343211872 started searching q-sweep [508869, 763303]
+Thread Thread 22254853343211872 searching q-sweep: [1017737, 1272171 completed q-sweep search without finding divisor
+Thread 254853334757728 started searching q-sweep [763303, 1017737]
+Thread 254853334757728 completed q-sweep search without finding divisor
+]
+Thread 23 searching q-sweep: [1272171, 1526605]
+Thread 254853309395296 started searching q-sweep [1017737, 1272171]
+Thread 254853309395296 completed q-sweep search without finding divisor
+Thread 24 searching q-sweep: [1526605, 1781039]
+Thread 254853225902432 started searching q-sweep [1272171, 1526605]
+Thread 254853225902432 completed q-sweep search without finding divisor
+Thread 25 searching q-sweep: [1781039, 2035473]
+Thread 254853217448288 started searching q-sweep [1526605, 1781039]
+Thread 254853217448288 completed q-sweep search without finding divisor
+Thread 26 searching q-sweep: [2035473, 2289907]
+Thread 254853208994144 started searching q-sweep [1781039, 2035473]
+Thread 254853208994144 completed q-sweep search without finding divisor
+Thread 27 searching q-sweep: [2289907, 2544341]
+Thread 254853200540000 started searching q-sweep [2035473, 2289907]
+Thread 254853200540000 completed q-sweep search without finding divisor
+Created 20 threads for parallel search
+Thread 254853192085856 started searching q-sweep [2289907, 2544341]
+Thread 254853192085856 completed q-sweep search without finding divisor
+All threads completed for k=3
+Found divisor: 551069499791
+Method 3 (Parallelized with Dynamic Blocks) completed in 0.00410121 seconds (wall clock), 0.015163 seconds (CPU time)
+Method 2 (Ultrafast with Structural Filter) completed in 0.0623547 seconds (wall clock), 0.13188 seconds (CPU time)
+Method 1 (Expanded q Factorization) completed in 4.58106 seconds (wall clock), 4.65134 seconds (CPU time)
+
+Results for number 1522605027922533:
+Method 1 (Expanded q Factorization) found factors: 3, 3, 551069499791, 307
+Method 2 (Ultrafast with Structural Filter) found factors: 3, 3, 551069499791, 307
+Method 3 (Parallelized with Dynamic Blocks) found factors: 3, 3, 551069499791, 307
+
+----------------------------------------
+
+
+========================================
+Testing with number: 9007199254740991
+========================================
+
+Starting Method 1 (Expanded q Factorization) on thread 254853326303584
+Starting Method 2 (Ultrafast with Structural Filter) on thread 254853317849440
+Method 1 (Expanded q Factorization) completed in 1.6148e-05 seconds (wall clock), 3.3e-05 seconds (CPU time)
+Starting Method 3 (Parallelized with Dynamic Blocks) with 28 threads on thread 254853610533216
+MFPMethod3 initialized with 28 threads
+Method 2 (Ultrafast with Structural Filter) completed in 1.5288e-05 seconds (wall clock), 4.4e-05 seconds (CPU time)
+Parallelized factorization with k=1, using 28 threads
+i_max=3001201, q_max=60023992, i_est=3001199
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [3001199, 3001201)
+Thread 1 searching i-block below: [2947606, 3001199)
+Thread 254853326303584 started searching i-block [3001199, 3001201)
+Thread 254853326303584 completed i-block search without finding divisor
+Thread 3 searching i-block below: [2894013, 2947606)
+Thread 254853317849440 started searching i-block [2947606, 3001199)
+Thread 5 searching i-block below: [2840420, 2894013)
+Thread 254853192085856 started searching i-block [2894013, 2947606)
+Thread 7 searching i-block below: [2786827, 2840420)
+Thread 254853627441504 started searching i-block [2840420, 2894013)
+Thread 9 searching i-block below: [2733234, 2786827)
+Thread 254853618987360 started searching i-block [2786827, 2840420)
+Thread 11 searching i-block below: [2679641, 2733234)
+Thread 254853602079072 started searching i-block [2733234, 2786827)
+Thread 13 searching i-block below: [2626048, 2679641)
+Thread 254853593624928 started searching i-block [2679641, 2733234)
+Thread 15 searching i-block below: [2572455, 2626048)
+Thread 254853585170784 started searching i-block [2626048, 2679641)
+Thread 17 searching i-block below: [2518862, 2572455)
+Thread 254853576716640 started searching i-block [2572455, 2626048)
+Thread 18 searching q-sweep: [1, 1071858]
+Thread 254853360120160 started searching i-block [2518862, 2572455)
+Thread 19 searching q-sweep: [1071858, 2143715]
+Thread 254853351666016 started searching q-sweep [1, 1071858]
+Thread 20 searching q-sweep: [2143715, 3215572]
+Thread Thread 254853593624928 completed i-block search without finding divisorThread Thread Thread 254853360120160Thread Thread 
+254853602079072 completed i-block search without finding divisor254853576716640Thread  completed i-block search without finding divisor
+254853618987360Thread 254853627441504 completed i-block search without finding divisor
+Thread  completed i-block search without finding divisor254853317849440254853351666016 found divisor: 1416003655831
+ completed i-block search without finding divisor
+Thread 
+
+254853585170784254853192085856254853343211872 started searching q-sweep [1071858, 2143715] completed i-block search without finding divisor
+Thread 254853334757728 started searching q-sweep [2143715, 3215572]
+Thread Thread 254853334757728 completed q-sweep search without finding divisor
+Thread 21 searching q-sweep: [3215572, 4287429]
+ completed i-block search without finding divisor
+254853343211872 completed q-sweep search without finding divisor
+ completed i-block search without finding divisorThread 22 searching q-sweep: [4287429, 5359286]
+Thread 254853309395296 started searching q-sweep [
+3215572
+, 4287429]
+Thread 254853309395296 completed q-sweep search without finding divisor
+Thread 23 searching q-sweep: [5359286, 6431143]
+Thread 254853225902432 started searching q-sweep [4287429, 5359286]
+Thread 254853225902432 completed q-sweep search without finding divisor
+Thread 24 searching q-sweep: [6431143, 7503000]
+Thread 254853217448288 started searching q-sweep [5359286, 6431143]
+Thread 254853217448288 completed q-sweep search without finding divisor
+Thread 25 searching q-sweep: [7503000, 8574857]
+Thread 254853208994144 started searching q-sweep [6431143, 7503000]
+Thread 254853208994144 completed q-sweep search without finding divisor
+Thread 26 searching q-sweep: [8574857, 9646714]
+Thread 254853200540000 started searching q-sweep [7503000, 8574857]
+Thread 254853200540000 completed q-sweep search without finding divisor
+Thread 27 searching q-sweep: [9646714, 10718571]
+Thread 254853183631712 started searching q-sweep [8574857, 9646714]
+Thread 254853183631712 completed q-sweep search without finding divisor
+Created 20 threads for parallel search
+Thread 254853175177568 started searching q-sweep [9646714, 10718571]
+Thread 254853175177568 completed q-sweep search without finding divisor
+All threads completed for k=1
+Found divisor: 1416003655831
+Parallelized factorization with k=1, using 28 threads
+i_max=3001201, q_max=60023992, i_est=3001199
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [3001199, 3001201)
+Thread 1 searching i-block below: [2947606, 3001199)
+Thread 254853175177568 started searching i-block [3001199, 3001201)
+Thread 254853175177568 completed i-block search without finding divisor
+Thread 3 searching i-block below: [2894013, 2947606)
+Thread 254853183631712 started searching i-block [2947606, 3001199)
+Thread 5 searching i-block below: [2840420, 2894013)
+Thread 254853200540000 started searching i-block [2894013, 2947606)
+Thread 7 searching i-block below: [2786827, 2840420)
+Thread 254853208994144 started searching i-block [2840420, 2894013)
+Thread 9 searching i-block below: [2733234, 2786827)
+Thread 254853627441504 started searching i-block [2786827, 2840420)
+Thread 11 searching i-block below: [2679641, 2733234)
+Thread 254853618987360 started searching i-block [2733234, 2786827)
+Thread 13 searching i-block below: [2626048, 2679641)
+Thread 254853602079072 started searching i-block [2679641, 2733234)
+Thread 15 searching i-block below: [2572455, 2626048)
+Thread 254853593624928 started searching i-block [2626048, 2679641)
+Thread 17 searching i-block below: [2518862, 2572455)
+Thread 254853585170784 started searching i-block [2572455, 2626048)
+Thread 18 searching q-sweep: [1, 1071858]
+Thread 254853576716640 started searching i-block [2518862, 2572455)
+Thread 19 searching q-sweep: [1071858, 2143715]
+Thread 254853360120160 started searching q-sweep [1, 1071858]
+Thread 20 searching q-sweep: [2143715, 3215572]
+Thread Thread Thread Thread Thread 254853602079072 completed i-block search without finding divisorThread 254853360120160Thread 254853183631712254853351666016 started searching q-sweep [1071858, 2143715]
+
+Thread Thread 21 searching q-sweep: [3215572, 4287429]
+Thread 254853576716640 completed i-block search without finding divisor
+254853208994144254853585170784Thread  found divisor:  completed i-block search without finding divisor254853618987360 completed i-block search without finding divisor
+
+Thread  completed i-block search without finding divisorThread  completed i-block search without finding divisor254853343211872 started searching q-sweep [
+2143715
+Thread 22 searching q-sweep: [4287429, 5359286]
+254853351666016 completed q-sweep search without finding divisor
+Thread 254853334757728 started searching q-sweep [3215572Thread 254853200540000 completed i-block search without finding divisor, 
+4287429]1416003655831Thread 23 searching q-sweep: [5359286, 6431143]
+254853627441504
+, 2548535936249283215572 completed i-block search without finding divisor
+ completed i-block search without finding divisor
+]
+Thread Thread 254853343211872 completed q-sweep search without finding divisor
+254853326303584 started searching q-sweep [4287429, 5359286]
+Thread 254853326303584 completed q-sweep search without finding divisor
+Thread 
+Thread 254853334757728 completed q-sweep search without finding divisor
+Thread 254853317849440 started searching q-sweep [5359286, 6431143]
+Thread 254853317849440 completed q-sweep search without finding divisor
+24 searching q-sweep: [6431143, 7503000]
+Thread 25 searching q-sweep: [7503000, 8574857]
+Thread 254853309395296 started searching q-sweep [6431143, 7503000]
+Thread 254853309395296 completed q-sweep search without finding divisor
+Thread 26 searching q-sweep: [8574857, 9646714]
+Thread 254853225902432 started searching q-sweep [7503000, 8574857]
+Thread 254853225902432 completed q-sweep search without finding divisor
+Thread 27 searching q-sweep: [9646714, 10718571]
+Thread 254853217448288 started searching q-sweep [8574857, 9646714]
+Thread 254853217448288 completed q-sweep search without finding divisor
+Created 20 threads for parallel search
+Thread 254853192085856 started searching q-sweep [9646714, 10718571]
+Thread 254853192085856 completed q-sweep search without finding divisor
+All threads completed for k=1
+Found divisor: 1416003655831
+Method 3 (Parallelized with Dynamic Blocks) completed in 0.00133626 seconds (wall clock), 0.004413 seconds (CPU time)
+
+Results for number 9007199254740991:
+Method 1 (Expanded q Factorization) found factors: 1416003655831, 6361
+Method 2 (Ultrafast with Structural Filter) found factors: 1416003655831, 6361
+Method 3 (Parallelized with Dynamic Blocks) found factors: 1416003655831, 6361
+
+----------------------------------------
+
+
+========================================
+Testing with number: 147573952589676412927
+========================================
+
+Starting Method 1 (Expanded q Factorization) on thread 254853610533216
+Starting Method 2 (Ultrafast with Structural Filter) on thread 254853192085856
+Starting Method 3 (Parallelized with Dynamic Blocks) with 28 threads on thread 254853217448288
+MFPMethod3 initialized with 28 threads
+Parallelized factorization with k=1, using 28 threads
+i_max=384153555, q_max=7683071066, i_est=384153553
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [384153553, 384153555)
+Thread 1 searching i-block below: [377293668, 384153553)
+Thread 254853225902432 started searching i-block [384153553, 384153555)
+Thread 254853225902432 completed i-block search without finding divisor
+Thread 3 searching i-block below: [370433783, 377293668)
+Thread 254853627441504 started searching i-block [377293668, 384153553)
+Thread 5 searching i-block below: [363573898, 370433783)
+Thread 254853618987360 started searching i-block [370433783, 377293668)
+Thread 7 searching i-block below: [356714013, 363573898)
+Thread 254853602079072 started searching i-block [363573898, 370433783)
+Thread 9 searching i-block below: [349854128, 356714013)
+Thread 254853593624928 started searching i-block [356714013, 363573898)
+Thread 11 searching i-block below: [342994243, 349854128)
+Thread 254853585170784 started searching i-block [349854128, 356714013)
+Thread 13 searching i-block below: [336134358, 342994243)
+Thread 254853576716640 started searching i-block [342994243, 349854128)
+Thread 15 searching i-block below: [329274473, 336134358)
+Thread 254853360120160 started searching i-block [336134358, 342994243)
+Thread 17 searching i-block below: [322414588, 329274473)
+Thread 254853351666016 started searching i-block [329274473, 336134358)
+Thread 18 searching q-sweep: [1, 137197699]
+Thread 254853343211872 started searching i-block [322414588, 329274473)
+Thread 19 searching q-sweep: [137197699, 274395397]
+Thread 254853334757728 started searching q-sweep [1, 137197699]
+Thread 20 searching q-sweep: [274395397, 411593095]
+Thread 254853326303584 started searching q-sweep [137197699, 274395397]
+Thread 21 searching q-sweep: [411593095, 548790793]
+Thread 254853317849440 started searching q-sweep [274395397, 411593095]
+Thread 22 searching q-sweep: [548790793, 685988491]
+Thread 254853309395296 started searching q-sweep [411593095, 548790793]
+Thread 23 searching q-sweep: [685988491, 823186189]
+Thread 254853208994144 started searching q-sweep [548790793, 685988491]
+Thread 24 searching q-sweep: [823186189, 960383887]
+Thread 254853200540000 started searching q-sweep [685988491, 823186189]
+Thread 25 searching q-sweep: [960383887, 1097581585]
+Thread 254853183631712 started searching q-sweep [823186189, 960383887]
+Thread 26 searching q-sweep: [1097581585, 1234779283]
+Thread 254853175177568 started searching q-sweep [960383887, 1097581585]
+Thread 27 searching q-sweep: [1234779283, 1371976981]
+Thread 254853166723424 started searching q-sweep [1097581585, 1234779283]
+Created 20 threads for parallel search
+Thread 254853158269280 started searching q-sweep [1234779283, 1371976981]
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 254853585170784 completed i-block search without finding divisor
+Thread 254853593624928 completed i-block search without finding divisor
+Thread 254853360120160 completed i-block search without finding divisor
+Thread 254853351666016 completed i-block search without finding divisor
+Thread 254853576716640 completed i-block search without finding divisor
+Thread 254853343211872 completed i-block search without finding divisor
+Thread 254853334757728Thread Thread Thread 254853208994144Thread Thread 254853158269280 completed q-sweep search without finding divisor
+Thread 254853200540000 completed q-sweep search without finding divisor
+ completed q-sweep search without finding divisor
+Thread 254853166723424 completed q-sweep search without finding divisor
+Thread 254853309395296 completed q-sweep search without finding divisor
+254853317849440 completed q-sweep search without finding divisor
+254853326303584 completed q-sweep search without finding divisor
+254853183631712 completed q-sweep search without finding divisor
+Thread 254853175177568 completed q-sweep search without finding divisor
+ found divisor: 761838257287
+All threads completed for k=1
+Found divisor: 761838257287
+Parallelized factorization with k=1, using 28 threads
+i_max=384153555, q_max=7683071066, i_est=384153553
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [384153553, 384153555)
+Thread 1 searching i-block below: [377293668, 384153553)
+Thread 254853158269280 started searching i-block [384153553, 384153555)
+Thread 254853158269280 completed i-block search without finding divisor
+Thread 3 searching i-block below: [370433783, 377293668)
+Thread 254853166723424 started searching i-block [377293668, 384153553)
+Thread 5 searching i-block below: [363573898, 370433783)
+Thread 254853175177568 started searching i-block [370433783, 377293668)
+Thread 7 searching i-block below: [356714013, 363573898)
+Thread 254853183631712 started searching i-block [363573898, 370433783)
+Thread 9 searching i-block below: [349854128, 356714013)
+Thread 254853627441504 started searching i-block [356714013, 363573898)
+Thread 11 searching i-block below: [342994243, 349854128)
+Thread 254853618987360 started searching i-block [349854128, 356714013)
+Thread 13 searching i-block below: [336134358, 342994243)
+Thread 254853602079072 started searching i-block [342994243, 349854128)
+Thread 15 searching i-block below: [329274473, 336134358)
+Thread 254853593624928 started searching i-block [336134358, 342994243)
+Thread 17 searching i-block below: [322414588, 329274473)
+Thread 254853585170784 started searching i-block [329274473, 336134358)
+Thread 18 searching q-sweep: [1, 137197699]
+Thread 254853576716640 started searching i-block [322414588, 329274473)
+Thread 19 searching q-sweep: [137197699, 274395397]
+Thread 254853360120160 started searching q-sweep [1, 137197699]
+Thread 20 searching q-sweep: [274395397, 411593095]
+Thread 254853351666016 started searching q-sweep [137197699, 274395397]
+Thread 21 searching q-sweep: [411593095, 548790793]
+Thread 254853343211872 started searching q-sweep [274395397, 411593095]
+Thread 22 searching q-sweep: [548790793, 685988491]
+Thread 254853334757728 started searching q-sweep [411593095, 548790793]
+Thread 23 searching q-sweep: [685988491, 823186189]
+Thread 254853326303584 started searching q-sweep [548790793, 685988491]
+Thread 24 searching q-sweep: [823186189, 960383887]
+Thread 254853317849440 started searching q-sweep [685988491, 823186189]
+Thread 25 searching q-sweep: [960383887, 1097581585]
+Thread 254853309395296 started searching q-sweep [823186189, 960383887]
+Thread 26 searching q-sweep: [1097581585, 1234779283]
+Thread 254853225902432 started searching q-sweep [960383887, 1097581585]
+Thread 27 searching q-sweep: [1234779283, 1371976981]
+Thread 254853208994144 started searching q-sweep [1097581585, 1234779283]
+Created 20 threads for parallel search
+Thread 254853200540000 started searching q-sweep [1234779283, 1371976981]
+Thread 254853183631712 completed i-block search without finding divisor
+Thread 254853175177568 completed i-block search without finding divisor
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 254853166723424 completed i-block search without finding divisor
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 254853593624928 completed i-block search without finding divisor
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 254853576716640 completed i-block search without finding divisor
+Thread 254853585170784 completed i-block search without finding divisor
+Method 2 (Ultrafast with Structural Filter) completed in 0.216301 seconds (wall clock), 3.29853 seconds (CPU time)
+Method 1 (Expanded q Factorization) completed in 0.219699 seconds (wall clock), 3.3323 seconds (CPU time)
+Thread Thread Thread 254853360120160Thread Thread  found divisor: 761838257287
+Thread Thread 254853343211872 completed q-sweep search without finding divisor
+254853208994144254853225902432 completed q-sweep search without finding divisor
+Thread 254853200540000254853351666016 completed q-sweep search without finding divisor completed q-sweep search without finding divisor
+
+Thread  completed q-sweep search without finding divisor254853309395296 completed q-sweep search without finding divisor
+254853317849440254853326303584 completed q-sweep search without finding divisor
+Thread 
+254853334757728 completed q-sweep search without finding divisor
+ completed q-sweep search without finding divisor
+All threads completed for k=1
+Found divisor: 761838257287
+Parallelized factorization with k=1, using 28 threads
+i_max=442, q_max=8802, i_est=440
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [440, 442)
+Thread 1 searching i-block below: [432, 440)
+Thread 254853200540000 started searching i-block [440, 442)
+Thread 254853200540000 completed i-block search without finding divisor
+Thread 3 searching i-block below: [424, 432)
+Thread 254853208994144 started searching i-block [432, 440)
+Thread 254853208994144 completed i-block search without finding divisor
+Thread 5 searching i-block below: [416, 424)
+Thread 254853225902432 started searching i-block [424, 432)
+Thread 254853225902432 completed i-block search without finding divisor
+Thread 7 searching i-block below: [408, 416)
+Thread 254853309395296 started searching i-block [416, 424)
+Thread 254853309395296 completed i-block search without finding divisor
+Thread 9 searching i-block below: [400, 408)
+Thread 254853627441504 started searching i-block [408, 416)
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 11 searching i-block below: [392, 400)
+Thread 254853618987360 started searching i-block [400, 408)
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 13 searching i-block below: [384, 392)
+Thread 254853610533216 started searching i-block [392, 400)
+Thread 254853610533216 completed i-block search without finding divisor
+Thread 15 searching i-block below: [376, 384)
+Thread 254853602079072 started searching i-block [384, 392)
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 17 searching i-block below: [368, 376)
+Thread 254853593624928 started searching i-block [376, 384)
+Thread 254853593624928 completed i-block search without finding divisor
+Thread 18 searching q-sweep: [1, 159]
+Thread 254853585170784 started searching i-block [368, 376)
+Thread 254853585170784 completed i-block search without finding divisor
+Thread 19 searching q-sweep: [159, 317]
+Thread 254853576716640 started searching q-sweep [1, 159]
+Thread 254853576716640 completed q-sweep search without finding divisor
+Thread 20 searching q-sweep: [317, 475]
+Thread 254853360120160 started searching q-sweep [159, 317]
+Thread 254853360120160 completed q-sweep search without finding divisor
+Thread 21 searching q-sweep: [475, 633]
+Thread 254853351666016 started searching q-sweep [317, 475]
+Thread 254853351666016 completed q-sweep search without finding divisor
+Thread 22 searching q-sweep: [633, 791]
+Thread 254853343211872 started searching q-sweep [475, 633]
+Thread 254853343211872 completed q-sweep search without finding divisor
+Thread 23 searching q-sweep: [791, 949]
+Thread 254853334757728 started searching q-sweep [633, 791]
+Thread 254853334757728 completed q-sweep search without finding divisor
+Thread 24 searching q-sweep: [949, 1107]
+Thread 254853326303584 started searching q-sweep [791, 949]
+Thread 254853326303584 completed q-sweep search without finding divisor
+Thread 25 searching q-sweep: [1107, 1265]
+Thread 254853317849440 started searching q-sweep [949, 1107]
+Thread 254853317849440 completed q-sweep search without finding divisor
+Thread 26 searching q-sweep: [1265, 1423]
+Thread 254853192085856 started searching q-sweep [1107, 1265]
+Thread 254853192085856 completed q-sweep search without finding divisor
+Thread 27 searching q-sweep: [1423, 1581]
+Thread 254853183631712 started searching q-sweep [1265, 1423]
+Thread 254853183631712 completed q-sweep search without finding divisor
+Created 20 threads for parallel search
+Thread 254853175177568 started searching q-sweep [1423, 1581]
+Thread 254853175177568 completed q-sweep search without finding divisor
+All threads completed for k=1
+Parallelized factorization with k=3, using 28 threads
+i_max=764, q_max=15246, i_est=762
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [762, 764)
+Thread 1 searching i-block below: [748, 762)
+Thread 254853175177568 started searching i-block [762, 764)
+Thread 254853175177568 completed i-block search without finding divisor
+Thread 3 searching i-block below: [734, 748)
+Thread 254853183631712 started searching i-block [748, 762)
+Thread 254853183631712 completed i-block search without finding divisor
+Thread 5 searching i-block below: [720, 734)
+Thread 254853192085856 started searching i-block [734, 748)
+Thread 254853192085856 completed i-block search without finding divisor
+Thread 7 searching i-block below: [706, 720)
+Thread 254853317849440 started searching i-block [720, 734)
+Thread 254853317849440 completed i-block search without finding divisor
+Thread 9 searching i-block below: [692, 706)
+Thread 254853627441504 started searching i-block [706, 720)
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 11 searching i-block below: [678, 692)
+Thread 254853618987360 started searching i-block [692, 706)
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 13 searching i-block below: [664, 678)
+Thread 254853610533216 started searching i-block [678, 692)
+Thread 254853610533216 completed i-block search without finding divisor
+Thread 15 searching i-block below: [650, 664)
+Thread 254853602079072 started searching i-block [664, 678)
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 17 searching i-block below: [636, 650)
+Thread 254853593624928 started searching i-block [650, 664)
+Thread 254853593624928 completed i-block search without finding divisor
+Thread 18 searching q-sweep: [1, 274]
+Thread 254853585170784 started searching i-block [636, 650)
+Thread 254853585170784 completed i-block search without finding divisor
+Thread 19 searching q-sweep: [274, 547]
+Thread 254853576716640 started searching q-sweep [1, 274]
+Thread 254853576716640 completed q-sweep search without finding divisor
+Thread 20 searching q-sweep: [547, 820]
+Thread 254853360120160 started searching q-sweep [274, 547]
+Thread 254853360120160 completed q-sweep search without finding divisor
+Thread 21 searching q-sweep: [820, 1093]
+Thread 254853351666016 started searching q-sweep [547, 820]
+Thread 254853351666016 completed q-sweep search without finding divisor
+Thread 22 searching q-sweep: [1093, 1366]
+Thread 254853343211872 started searching q-sweep [820, 1093]
+Thread 254853343211872 completed q-sweep search without finding divisor
+Thread 23 searching q-sweep: [1366, 1639]
+Thread 254853334757728 started searching q-sweep [1093, 1366]
+Thread 254853334757728 completed q-sweep search without finding divisor
+Thread 24 searching q-sweep: [1639, 1912]
+Thread 254853326303584 started searching q-sweep [1366, 1639]
+Thread 254853326303584 completed q-sweep search without finding divisor
+Thread 25 searching q-sweep: [1912, 2185]
+Thread 254853309395296 started searching q-sweep [1639, 1912]
+Thread 254853309395296 completed q-sweep search without finding divisor
+Thread 26 searching q-sweep: [2185, 2458]
+Thread 254853225902432 started searching q-sweep [1912, 2185]
+Thread 254853225902432 completed q-sweep search without finding divisor
+Thread 27 searching q-sweep: [2458, 2731]
+Thread 254853208994144 started searching q-sweep [2185, 2458]
+Thread 254853208994144 completed q-sweep search without finding divisor
+Created 20 threads for parallel search
+Thread 254853200540000 started searching q-sweep [2458, 2731]
+Thread 254853200540000 completed q-sweep search without finding divisor
+All threads completed for k=3
+Parallelized factorization with k=7, using 28 threads
+i_max=1166, q_max=23288, i_est=1164
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [1164, 1166)
+Thread 1 searching i-block below: [1143, 1164)
+Thread 254853200540000 started searching i-block [1164, 1166)
+Thread 254853200540000 completed i-block search without finding divisor
+Thread 3 searching i-block below: [1122, 1143)
+Thread 254853208994144 started searching i-block [1143, 1164)
+Thread 254853208994144 completed i-block search without finding divisor
+Thread 5 searching i-block below: [1101, 1122)
+Thread 254853225902432 started searching i-block [1122, 1143)
+Thread 254853225902432 completed i-block search without finding divisor
+Thread 7 searching i-block below: [1080, 1101)
+Thread 254853309395296 started searching i-block [1101, 1122)
+Thread 254853309395296 completed i-block search without finding divisor
+Thread 9 searching i-block below: [1059, 1080)
+Thread 254853627441504 started searching i-block [1080, 1101)
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 11 searching i-block below: [1038, 1059)
+Thread 254853618987360 started searching i-block [1059, 1080)
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 13 searching i-block below: [1017, 1038)
+Thread 254853610533216 started searching i-block [1038, 1059)
+Thread 254853610533216 completed i-block search without finding divisor
+Thread 15 searching i-block below: [996, 1017)
+Thread 254853602079072 started searching i-block [1017, 1038)
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 17 searching i-block below: [975, 996)
+Thread 254853593624928 started searching i-block [996, 1017)
+Thread 254853593624928 completed i-block search without finding divisor
+Thread 18 searching q-sweep: [1, 417]
+Thread 254853585170784 started searching i-block [975, 996)
+Thread 254853585170784 completed i-block search without finding divisor
+Thread 19 searching q-sweep: [417, 833]
+Thread 254853576716640 started searching q-sweep [1, 417]
+Thread 254853576716640 completed q-sweep search without finding divisor
+Thread 20 searching q-sweep: [833, 1249]
+Thread 254853360120160 started searching q-sweep [417, 833]
+Thread 254853360120160 completed q-sweep search without finding divisor
+Thread 21 searching q-sweep: [1249, 1665]
+Thread 254853351666016 started searching q-sweep [833, 1249]
+Thread 254853351666016 completed q-sweep search without finding divisor
+Thread 22 searching q-sweep: [1665, 2081]
+Thread 254853343211872 started searching q-sweep [1249, 1665]
+Thread 254853343211872 completed q-sweep search without finding divisor
+Thread 23 searching q-sweep: [2081, 2497]
+Thread 254853334757728 started searching q-sweep [1665, 2081]
+Thread 254853334757728 completed q-sweep search without finding divisor
+Thread 24 searching q-sweep: [2497, 2913]
+Thread 254853326303584 started searching q-sweep [2081, 2497]
+Thread 254853326303584 completed q-sweep search without finding divisor
+Thread 25 searching q-sweep: [2913, 3329]
+Thread 254853317849440 started searching q-sweep [2497, 2913]
+Thread 254853317849440 completed q-sweep search without finding divisor
+Thread 26 searching q-sweep: [3329, 3745]
+Thread 254853192085856 started searching q-sweep [2913, 3329]
+Thread 254853192085856 completed q-sweep search without finding divisor
+Thread 27 searching q-sweep: [3745, 4161]
+Thread 254853183631712 started searching q-sweep [3329, 3745]
+Thread 254853183631712 completed q-sweep search without finding divisor
+Created 20 threads for parallel search
+Thread 254853175177568 started searching q-sweep [3745, 4161]
+Thread 254853175177568 completed q-sweep search without finding divisor
+All threads completed for k=7
+Parallelized factorization with k=9, using 28 threads
+i_max=1322, q_max=26406, i_est=1320
+Allocating 18 threads for i-search and 10 threads for q-sweep
+Thread 0 searching i-block above: [1320, 1322)
+Thread 1 searching i-block below: [1296, 1320)
+Thread 254853175177568 started searching i-block [1320, 1322)
+Thread 254853175177568 completed i-block search without finding divisor
+Thread 3 searching i-block below: [1272, 1296)
+Thread 254853183631712 started searching i-block [1296, 1320)
+Thread 254853183631712 completed i-block search without finding divisor
+Thread 5 searching i-block below: [1248, 1272)
+Thread 254853192085856 started searching i-block [1272, 1296)
+Thread 254853192085856 completed i-block search without finding divisor
+Thread 7 searching i-block below: [1224, 1248)
+Thread 254853317849440 started searching i-block [1248, 1272)
+Thread 254853317849440 completed i-block search without finding divisor
+Thread 9 searching i-block below: [1200, 1224)
+Thread 254853627441504 started searching i-block [1224, 1248)
+Thread 254853627441504 completed i-block search without finding divisor
+Thread 11 searching i-block below: [1176, 1200)
+Thread 254853618987360 started searching i-block [1200, 1224)
+Thread 254853618987360 completed i-block search without finding divisor
+Thread 13 searching i-block below: [1152, 1176)
+Thread 254853610533216 started searching i-block [1176, 1200)
+Thread 254853610533216 completed i-block search without finding divisor
+Thread 15 searching i-block below: [1128, 1152)
+Thread 254853602079072 started searching i-block [1152, 1176)
+Thread 254853602079072 completed i-block search without finding divisor
+Thread 17 searching i-block below: [1104, 1128)
+Thread 254853593624928 started searching i-block [1128, 1152)
+Thread 254853593624928 completed i-block search without finding divisor
+Thread 18 searching q-sweep: [1, 473]
+Thread 254853585170784 started searching i-block [1104, 1128)
+Thread 254853585170784 completed i-block search without finding divisor
+Thread 19 searching q-sweep: [473, 945]
+Thread 254853576716640 started searching q-sweep [1, 473]
+Thread 254853576716640 completed q-sweep search without finding divisor
+Thread 20 searching q-sweep: [945, 1417]
+Thread 254853360120160 started searching q-sweep [473, 945]
+Thread 254853360120160 completed q-sweep search without finding divisor
+Thread 21 searching q-sweep: [1417, 1889]
+Thread 254853351666016 started searching q-sweep [945, 1417]
+Thread 254853351666016 completed q-sweep search without finding divisor
+Thread 22 searching q-sweep: [1889, 2361]
+Thread 254853343211872 started searching q-sweep [1417, 1889]
+Thread 254853343211872 completed q-sweep search without finding divisor
+Thread 23 searching q-sweep: [2361, 2833]
+Thread 254853334757728 started searching q-sweep [1889, 2361]
+Thread 254853334757728 completed q-sweep search without finding divisor
+Thread 24 searching q-sweep: [2833, 3305]
+Thread 254853326303584 started searching q-sweep [2361, 2833]
+Thread 254853326303584 completed q-sweep search without finding divisor
+Thread 25 searching q-sweep: [3305, 3777]
+Thread 254853309395296 started searching q-sweep [2833, 3305]
+Thread 254853309395296 completed q-sweep search without finding divisor
+Thread 26 searching q-sweep: [3777, 4249]
+Thread 254853225902432 started searching q-sweep [3305, 3777]
+Thread 254853225902432 completed q-sweep search without finding divisor
+Thread 27 searching q-sweep: [4249, 4721]
+Thread 254853208994144 started searching q-sweep [3777, 4249]
+Thread 254853208994144 completed q-sweep search without finding divisor
+Created 20 threads for parallel search
+Thread 254853200540000 started searching q-sweep [4249, 4721]
+Thread 254853200540000 completed q-sweep search without finding divisor
+All threads completed for k=9
+Method 3 (Parallelized with Dynamic Blocks) completed in 0.249771 seconds (wall clock), 3.61862 seconds (CPU time)
+
+Results for number 147573952589676412927:
+Method 1 (Expanded q Factorization) found factors: 761838257287, 193707721
+Method 2 (Ultrafast with Structural Filter) found factors: 761838257287, 193707721
+Method 3 (Parallelized with Dynamic Blocks) found factors: 761838257287, 193707721
+
+----------------------------------------
+
+
+=== Performance Comparison Table ===
+
+Number         Method                                       Threads        Duration (s)   Speedup        
+---------------------------------------------------------------------------------------------------------
+
+Number: 91
+---------------------------------------------------------------------------------------------------------
+               Method 1 (Expanded q Factorization)          1              0.000033       1.00           x
+               Method 2 (Ultrafast with Structural Filter)  1              0.000040       0.84           x
+               Method 3 (Parallelized with Dynamic Blocks)  28             0.000766       0.04           x
+
+Number: 1522605027922533
+---------------------------------------------------------------------------------------------------------
+               Method 1 (Expanded q Factorization)          1              4.581063       1.00           x
+               Method 2 (Ultrafast with Structural Filter)  1              0.062355       73.47          x
+               Method 3 (Parallelized with Dynamic Blocks)  28             0.004101       1117.00        x
+
+Number: 9007199254740991
+---------------------------------------------------------------------------------------------------------
+               Method 1 (Expanded q Factorization)          1              0.000016       1.00           x
+               Method 2 (Ultrafast with Structural Filter)  1              0.000015       1.06           x
+               Method 3 (Parallelized with Dynamic Blocks)  28             0.001336       0.01           x
+
+Number: 147573952589676412927
+---------------------------------------------------------------------------------------------------------
+               Method 1 (Expanded q Factorization)          1              0.219699       1.00           x
+               Method 2 (Ultrafast with Structural Filter)  1              0.216301       1.02           x
+               Method 3 (Parallelized with Dynamic Blocks)  28             0.249771       0.88           x
+
+Performance metrics saved to mfp_performance_metrics.csv
