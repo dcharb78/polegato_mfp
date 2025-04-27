@@ -54,10 +54,11 @@ private:
      * @param found_divisor Atomic flag to indicate if a divisor was found
      * @param divisor_value Shared variable to store the found divisor
      * @param mtx Mutex for thread synchronization
+     * @param system_level The system level of the number being factorized
      */
     void searchBlock(const mpz_t n, int k, unsigned long i_start, unsigned long i_end, 
                     unsigned long A_ul, unsigned long d0, std::atomic<bool>& found_divisor, 
-                    unsigned long& divisor_value, std::mutex& mtx);
+                    unsigned long& divisor_value, std::mutex& mtx, int system_level);
     
     /**
      * Helper method to search for divisors using q sweep
@@ -70,10 +71,40 @@ private:
      * @param found_divisor Atomic flag to indicate if a divisor was found
      * @param divisor_value Shared variable to store the found divisor
      * @param mtx Mutex for thread synchronization
+     * @param system_level The system level of the number being factorized
      */
     void searchQSweep(const mpz_t n, int k, unsigned long q_start, unsigned long q_end, 
                      unsigned long A_ul, unsigned long d0, std::atomic<bool>& found_divisor, 
-                     unsigned long& divisor_value, std::mutex& mtx);
+                     unsigned long& divisor_value, std::mutex& mtx, int system_level);
+    
+    /**
+     * Determines the system level of a number
+     * @param n The number to check
+     * @return The system level (1-49)
+     */
+    int determineSystemLevel(const mpz_t n);
+    
+    /**
+     * Filters the search space based on system level
+     * @param system_level The system level of the number
+     * @param i_max Original i_max value
+     * @param q_max Original q_max value
+     * @param i_est Original i_est value
+     * @param filtered_i_max Output parameter for filtered i_max
+     * @param filtered_q_max Output parameter for filtered q_max
+     */
+    void filterSearchSpace(int system_level, 
+                          unsigned long i_max, unsigned long q_max, unsigned long i_est,
+                          unsigned long& filtered_i_max, unsigned long& filtered_q_max);
+    
+    /**
+     * Determines if a specific value should be included in the search
+     * based on Fibonacci-related offsets and key positions
+     * @param value The value to check
+     * @param system_level The system level
+     * @return true if the value should be included, false otherwise
+     */
+    bool shouldIncludeInSearch(unsigned long value, int system_level);
     
     int m_numThreads;  // Number of threads to use
 };

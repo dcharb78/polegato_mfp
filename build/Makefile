@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ubuntu/fixed_mfp
+CMAKE_SOURCE_DIR = /home/ubuntu/mfp_review/enhanced_mfp
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ubuntu/fixed_mfp/build
+CMAKE_BINARY_DIR = /home/ubuntu/mfp_review/enhanced_mfp/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -85,11 +85,56 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 .PHONY : rebuild_cache/fast
 
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+.PHONY : list_install_components/fast
+
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing the project stripped..."
+	/usr/bin/cmake -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
+
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu/fixed_mfp/build/CMakeFiles /home/ubuntu/fixed_mfp/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu/mfp_review/enhanced_mfp/build/CMakeFiles /home/ubuntu/mfp_review/enhanced_mfp/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu/fixed_mfp/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ubuntu/mfp_review/enhanced_mfp/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -117,17 +162,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named mfp
+# Target rules for targets named mfp_lib
 
 # Build rule for target.
-mfp: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mfp
-.PHONY : mfp
+mfp_lib: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mfp_lib
+.PHONY : mfp_lib
 
 # fast build rule for target.
-mfp/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/build
-.PHONY : mfp/fast
+mfp_lib/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/build
+.PHONY : mfp_lib/fast
 
 #=============================================================================
 # Target rules for targets named test_mfp
@@ -142,12 +187,77 @@ test_mfp/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_mfp.dir/build.make CMakeFiles/test_mfp.dir/build
 .PHONY : test_mfp/fast
 
+#=============================================================================
+# Target rules for targets named test_prime
+
+# Build rule for target.
+test_prime: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_prime
+.PHONY : test_prime
+
+# fast build rule for target.
+test_prime/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prime.dir/build.make CMakeFiles/test_prime.dir/build
+.PHONY : test_prime/fast
+
+#=============================================================================
+# Target rules for targets named test_composite
+
+# Build rule for target.
+test_composite: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_composite
+.PHONY : test_composite
+
+# fast build rule for target.
+test_composite/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_composite.dir/build.make CMakeFiles/test_composite.dir/build
+.PHONY : test_composite/fast
+
+#=============================================================================
+# Target rules for targets named test_concurrent
+
+# Build rule for target.
+test_concurrent: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_concurrent
+.PHONY : test_concurrent
+
+# fast build rule for target.
+test_concurrent/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_concurrent.dir/build.make CMakeFiles/test_concurrent.dir/build
+.PHONY : test_concurrent/fast
+
+#=============================================================================
+# Target rules for targets named mfp_cli
+
+# Build rule for target.
+mfp_cli: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 mfp_cli
+.PHONY : mfp_cli
+
+# fast build rule for target.
+mfp_cli/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_cli.dir/build.make CMakeFiles/mfp_cli.dir/build
+.PHONY : mfp_cli/fast
+
+#=============================================================================
+# Target rules for targets named test_search_space_reduction
+
+# Build rule for target.
+test_search_space_reduction: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_search_space_reduction
+.PHONY : test_search_space_reduction
+
+# fast build rule for target.
+test_search_space_reduction/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_search_space_reduction.dir/build.make CMakeFiles/test_search_space_reduction.dir/build
+.PHONY : test_search_space_reduction/fast
+
 src/mfp_base.o: src/mfp_base.cpp.o
 .PHONY : src/mfp_base.o
 
 # target to build an object file
 src/mfp_base.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_base.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_base.cpp.o
 .PHONY : src/mfp_base.cpp.o
 
 src/mfp_base.i: src/mfp_base.cpp.i
@@ -155,7 +265,7 @@ src/mfp_base.i: src/mfp_base.cpp.i
 
 # target to preprocess a source file
 src/mfp_base.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_base.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_base.cpp.i
 .PHONY : src/mfp_base.cpp.i
 
 src/mfp_base.s: src/mfp_base.cpp.s
@@ -163,15 +273,42 @@ src/mfp_base.s: src/mfp_base.cpp.s
 
 # target to generate assembly for a file
 src/mfp_base.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_base.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_base.cpp.s
 .PHONY : src/mfp_base.cpp.s
+
+src/mfp_cli.o: src/mfp_cli.cpp.o
+.PHONY : src/mfp_cli.o
+
+# target to build an object file
+src/mfp_cli.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_cli.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_cli.dir/build.make CMakeFiles/mfp_cli.dir/src/mfp_cli.cpp.o
+.PHONY : src/mfp_cli.cpp.o
+
+src/mfp_cli.i: src/mfp_cli.cpp.i
+.PHONY : src/mfp_cli.i
+
+# target to preprocess a source file
+src/mfp_cli.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_cli.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_cli.dir/build.make CMakeFiles/mfp_cli.dir/src/mfp_cli.cpp.i
+.PHONY : src/mfp_cli.cpp.i
+
+src/mfp_cli.s: src/mfp_cli.cpp.s
+.PHONY : src/mfp_cli.s
+
+# target to generate assembly for a file
+src/mfp_cli.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_cli.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_cli.dir/build.make CMakeFiles/mfp_cli.dir/src/mfp_cli.cpp.s
+.PHONY : src/mfp_cli.cpp.s
 
 src/mfp_method1.o: src/mfp_method1.cpp.o
 .PHONY : src/mfp_method1.o
 
 # target to build an object file
 src/mfp_method1.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method1.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_method1.cpp.o
 .PHONY : src/mfp_method1.cpp.o
 
 src/mfp_method1.i: src/mfp_method1.cpp.i
@@ -179,7 +316,7 @@ src/mfp_method1.i: src/mfp_method1.cpp.i
 
 # target to preprocess a source file
 src/mfp_method1.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method1.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_method1.cpp.i
 .PHONY : src/mfp_method1.cpp.i
 
 src/mfp_method1.s: src/mfp_method1.cpp.s
@@ -187,7 +324,7 @@ src/mfp_method1.s: src/mfp_method1.cpp.s
 
 # target to generate assembly for a file
 src/mfp_method1.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method1.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_method1.cpp.s
 .PHONY : src/mfp_method1.cpp.s
 
 src/mfp_method2.o: src/mfp_method2.cpp.o
@@ -195,7 +332,7 @@ src/mfp_method2.o: src/mfp_method2.cpp.o
 
 # target to build an object file
 src/mfp_method2.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method2.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_method2.cpp.o
 .PHONY : src/mfp_method2.cpp.o
 
 src/mfp_method2.i: src/mfp_method2.cpp.i
@@ -203,7 +340,7 @@ src/mfp_method2.i: src/mfp_method2.cpp.i
 
 # target to preprocess a source file
 src/mfp_method2.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method2.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_method2.cpp.i
 .PHONY : src/mfp_method2.cpp.i
 
 src/mfp_method2.s: src/mfp_method2.cpp.s
@@ -211,7 +348,7 @@ src/mfp_method2.s: src/mfp_method2.cpp.s
 
 # target to generate assembly for a file
 src/mfp_method2.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method2.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_method2.cpp.s
 .PHONY : src/mfp_method2.cpp.s
 
 src/mfp_method3.o: src/mfp_method3.cpp.o
@@ -219,7 +356,7 @@ src/mfp_method3.o: src/mfp_method3.cpp.o
 
 # target to build an object file
 src/mfp_method3.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method3.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_method3.cpp.o
 .PHONY : src/mfp_method3.cpp.o
 
 src/mfp_method3.i: src/mfp_method3.cpp.i
@@ -227,7 +364,7 @@ src/mfp_method3.i: src/mfp_method3.cpp.i
 
 # target to preprocess a source file
 src/mfp_method3.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method3.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_method3.cpp.i
 .PHONY : src/mfp_method3.cpp.i
 
 src/mfp_method3.s: src/mfp_method3.cpp.s
@@ -235,8 +372,56 @@ src/mfp_method3.s: src/mfp_method3.cpp.s
 
 # target to generate assembly for a file
 src/mfp_method3.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp.dir/build.make CMakeFiles/mfp.dir/src/mfp_method3.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/mfp_lib.dir/build.make CMakeFiles/mfp_lib.dir/src/mfp_method3.cpp.s
 .PHONY : src/mfp_method3.cpp.s
+
+test/test_composite.o: test/test_composite.cpp.o
+.PHONY : test/test_composite.o
+
+# target to build an object file
+test/test_composite.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_composite.dir/build.make CMakeFiles/test_composite.dir/test/test_composite.cpp.o
+.PHONY : test/test_composite.cpp.o
+
+test/test_composite.i: test/test_composite.cpp.i
+.PHONY : test/test_composite.i
+
+# target to preprocess a source file
+test/test_composite.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_composite.dir/build.make CMakeFiles/test_composite.dir/test/test_composite.cpp.i
+.PHONY : test/test_composite.cpp.i
+
+test/test_composite.s: test/test_composite.cpp.s
+.PHONY : test/test_composite.s
+
+# target to generate assembly for a file
+test/test_composite.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_composite.dir/build.make CMakeFiles/test_composite.dir/test/test_composite.cpp.s
+.PHONY : test/test_composite.cpp.s
+
+test/test_concurrent.o: test/test_concurrent.cpp.o
+.PHONY : test/test_concurrent.o
+
+# target to build an object file
+test/test_concurrent.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_concurrent.dir/build.make CMakeFiles/test_concurrent.dir/test/test_concurrent.cpp.o
+.PHONY : test/test_concurrent.cpp.o
+
+test/test_concurrent.i: test/test_concurrent.cpp.i
+.PHONY : test/test_concurrent.i
+
+# target to preprocess a source file
+test/test_concurrent.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_concurrent.dir/build.make CMakeFiles/test_concurrent.dir/test/test_concurrent.cpp.i
+.PHONY : test/test_concurrent.cpp.i
+
+test/test_concurrent.s: test/test_concurrent.cpp.s
+.PHONY : test/test_concurrent.s
+
+# target to generate assembly for a file
+test/test_concurrent.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_concurrent.dir/build.make CMakeFiles/test_concurrent.dir/test/test_concurrent.cpp.s
+.PHONY : test/test_concurrent.cpp.s
 
 test/test_mfp.o: test/test_mfp.cpp.o
 .PHONY : test/test_mfp.o
@@ -262,6 +447,54 @@ test/test_mfp.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_mfp.dir/build.make CMakeFiles/test_mfp.dir/test/test_mfp.cpp.s
 .PHONY : test/test_mfp.cpp.s
 
+test/test_prime.o: test/test_prime.cpp.o
+.PHONY : test/test_prime.o
+
+# target to build an object file
+test/test_prime.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prime.dir/build.make CMakeFiles/test_prime.dir/test/test_prime.cpp.o
+.PHONY : test/test_prime.cpp.o
+
+test/test_prime.i: test/test_prime.cpp.i
+.PHONY : test/test_prime.i
+
+# target to preprocess a source file
+test/test_prime.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prime.dir/build.make CMakeFiles/test_prime.dir/test/test_prime.cpp.i
+.PHONY : test/test_prime.cpp.i
+
+test/test_prime.s: test/test_prime.cpp.s
+.PHONY : test/test_prime.s
+
+# target to generate assembly for a file
+test/test_prime.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_prime.dir/build.make CMakeFiles/test_prime.dir/test/test_prime.cpp.s
+.PHONY : test/test_prime.cpp.s
+
+test/test_search_space_reduction.o: test/test_search_space_reduction.cpp.o
+.PHONY : test/test_search_space_reduction.o
+
+# target to build an object file
+test/test_search_space_reduction.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_search_space_reduction.dir/build.make CMakeFiles/test_search_space_reduction.dir/test/test_search_space_reduction.cpp.o
+.PHONY : test/test_search_space_reduction.cpp.o
+
+test/test_search_space_reduction.i: test/test_search_space_reduction.cpp.i
+.PHONY : test/test_search_space_reduction.i
+
+# target to preprocess a source file
+test/test_search_space_reduction.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_search_space_reduction.dir/build.make CMakeFiles/test_search_space_reduction.dir/test/test_search_space_reduction.cpp.i
+.PHONY : test/test_search_space_reduction.cpp.i
+
+test/test_search_space_reduction.s: test/test_search_space_reduction.cpp.s
+.PHONY : test/test_search_space_reduction.s
+
+# target to generate assembly for a file
+test/test_search_space_reduction.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_search_space_reduction.dir/build.make CMakeFiles/test_search_space_reduction.dir/test/test_search_space_reduction.cpp.s
+.PHONY : test/test_search_space_reduction.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -269,12 +502,24 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
+	@echo "... install"
+	@echo "... install/local"
+	@echo "... install/strip"
+	@echo "... list_install_components"
 	@echo "... rebuild_cache"
-	@echo "... mfp"
+	@echo "... mfp_cli"
+	@echo "... mfp_lib"
+	@echo "... test_composite"
+	@echo "... test_concurrent"
 	@echo "... test_mfp"
+	@echo "... test_prime"
+	@echo "... test_search_space_reduction"
 	@echo "... src/mfp_base.o"
 	@echo "... src/mfp_base.i"
 	@echo "... src/mfp_base.s"
+	@echo "... src/mfp_cli.o"
+	@echo "... src/mfp_cli.i"
+	@echo "... src/mfp_cli.s"
 	@echo "... src/mfp_method1.o"
 	@echo "... src/mfp_method1.i"
 	@echo "... src/mfp_method1.s"
@@ -284,9 +529,21 @@ help:
 	@echo "... src/mfp_method3.o"
 	@echo "... src/mfp_method3.i"
 	@echo "... src/mfp_method3.s"
+	@echo "... test/test_composite.o"
+	@echo "... test/test_composite.i"
+	@echo "... test/test_composite.s"
+	@echo "... test/test_concurrent.o"
+	@echo "... test/test_concurrent.i"
+	@echo "... test/test_concurrent.s"
 	@echo "... test/test_mfp.o"
 	@echo "... test/test_mfp.i"
 	@echo "... test/test_mfp.s"
+	@echo "... test/test_prime.o"
+	@echo "... test/test_prime.i"
+	@echo "... test/test_prime.s"
+	@echo "... test/test_search_space_reduction.o"
+	@echo "... test/test_search_space_reduction.i"
+	@echo "... test/test_search_space_reduction.s"
 .PHONY : help
 
 
